@@ -1,0 +1,144 @@
+version: "3.9"
+
+services:
+  # MySQL database (shared: flight_db, booking_db)
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: Ish983556
+      MYSQL_DATABASE: FlightBooking_Micro  # booking_db will also be created by app or manually
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - flight-net
+
+  # RabbitMQ (message broker + UI)
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: appuser
+      RABBITMQ_DEFAULT_PASS: appuserpassword
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    networks:
+      - flight-net
+
+  # Config Server
+  config-server:
+    build: ./config-server        # <-- change to your config-server folder name
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - rabbitmq
+      - mysql
+    networks:
+      - flight-net
+
+  # Eureka Service Registry
+  eureka-server:
+    build: ./service-registry     # <-- change to your eureka/service-registry folder
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+    depends_on:
+      - config-server
+    networks:
+      - flight-net
+
+  # Flight Service
+  flight-service:
+    build: ./flight-service       # <-- change to your FlightService module folder
+    container_name: flight-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/FlightBooking_Micro
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Ish983556
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: appuser
+      SPRING_RABBITMQ_PASSWORD: appPass123
+    depends_on:
+      - mysql
+      - rabbitmq
+      - eureka-server
+    networks:
+      - flight-net
+
+  # Booking Service
+  booking-service:
+    build: ./booking-service      # <-- change to your BookingService module folder
+    container_name: booking-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/Booking_Micro_db
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Ish983556
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: appuser
+      SPRING_RABBITMQ_PASSWORD: appPass123
+    depends_on:
+      - mysql
+      - rabbitmq
+      - eureka-server
+    networks:
+      - flight-net
+
+  # Email Service
+  email-service:
+    build: ./email-service        # <-- change to your EmailService module folder
+    container_name: email-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: appuser
+      SPRING_RABBITMQ_PASSWORD: appPass123
+    depends_on:
+      - rabbitmq
+      - eureka-server
+    networks:
+      - flight-net
+
+  # API Gateway
+  api-gateway:
+    build: ./api-gateway          # <-- change to your API-Gateway module folder
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      # optional: override jwt settings if you want
+      # JWT_SECRET: this_is_a_demo_secret_key_change_it_to_something_longer_123456
+    depends_on:
+      - eureka-server
+    networks:
+      - flight-net
+
+networks:
+  flight-net:
+
+volumes:
+  mysql-data:
