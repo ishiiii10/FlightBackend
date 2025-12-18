@@ -1,6 +1,16 @@
 spring:
   application:
-    name: emailservice
+    name: EMAILSERVICE
 
-  config:
-    import: optional:configserver:http://localhost:8888
+server:
+  port: 8084
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    hostname: localhost

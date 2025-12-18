@@ -108,6 +108,42 @@ public class FlightServiceImpl implements FlightService {
                 .build();
     }
 
+    @Override
+    public void reserveSeats(String flightNumber, int seatsToBook) {
+        if (seatsToBook <= 0) {
+            throw new IllegalArgumentException("Seats to book must be positive");
+        }
+
+        Flight flight = flightRepository.findByFlightNumberForUpdate(flightNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Flight not found: " + flightNumber));
+
+        int available = flight.getAvailableSeats();
+        if (available < seatsToBook) {
+            throw new IllegalStateException("Insufficient seats available");
+        }
+
+        flight.setAvailableSeats(available - seatsToBook);
+        flightRepository.save(flight);
+    }
+
+    @Override
+    public void releaseSeats(String flightNumber, int seatsToRelease) {
+        if (seatsToRelease <= 0) {
+            throw new IllegalArgumentException("Seats to release must be positive");
+        }
+
+        Flight flight = flightRepository.findByFlightNumberForUpdate(flightNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Flight not found: " + flightNumber));
+
+        int newAvailable = flight.getAvailableSeats() + seatsToRelease;
+        if (newAvailable > flight.getTotalSeats()) {
+            throw new IllegalStateException("Cannot release seats beyond total capacity");
+        }
+
+        flight.setAvailableSeats(newAvailable);
+        flightRepository.save(flight);
+    }
+
     private FlightSummaryResponse mapToSummary(Flight flight) {
         return FlightSummaryResponse.builder()
                 .id(flight.getId())

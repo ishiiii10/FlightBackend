@@ -68,4 +68,24 @@ public class FlightController {
                 flightService.getInternalFlightDetails(flightNumber)
         );
     }
+
+    // 🔒 INTERNAL – atomic seat reservation
+    @PostMapping("/internal/{flightNumber}/reserve")
+    public ResponseEntity<Void> reserveSeats(
+            @PathVariable String flightNumber,
+            @RequestParam("seats") int seats
+    ) {
+        flightService.reserveSeats(flightNumber, seats);
+        return ResponseEntity.ok().build();
+    }
+
+    // 🔒 INTERNAL – release seats on cancellation
+    @PostMapping("/internal/{flightNumber}/release")
+    public ResponseEntity<Void> releaseSeats(
+            @PathVariable String flightNumber,
+            @RequestParam("seats") int seats
+    ) {
+        flightService.releaseSeats(flightNumber, seats);
+        return ResponseEntity.ok().build();
+    }
 }

@@ -1,13 +1,8 @@
 package com.chubb.BookingService.service.impl;
 
-import lombok.RequiredArgsConstructor;
-
-import java.time.LocalDateTime;
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-
+import com.chubb.BookingService.client.EmailClient;
 import com.chubb.BookingService.client.FlightClient;
+import com.chubb.BookingService.dto.BookingConfirmedEmailRequest;
 import com.chubb.BookingService.dto.BookingSummaryResponse;
 import com.chubb.BookingService.dto.CancelBookingResponse;
 import com.chubb.BookingService.dto.CreateBookingRequest;
@@ -20,14 +15,23 @@ import com.chubb.BookingService.repository.BookingRepository;
 import com.chubb.BookingService.service.BookingService;
 import com.chubb.BookingService.util.PnrGenerator;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
     private final FlightClient flightClient;
+    private final EmailClient emailClient;
 
     @Override
+    @Transactional
     public CreateBookingResponse createBooking(
             CreateBookingRequest request,
             String userId,
@@ -50,12 +54,6 @@ public class BookingServiceImpl implements BookingService {
             throw new RuntimeException("Duplicate booking found");
         }
 
-        var flightDetails = flightClient.getFlightDetails(request.getFlightNumber());
-
-        if (flightDetails.getAvailableSeats() < request.getSeatsBooked()) {
-            throw new RuntimeException("Insufficient seats available");
-        }
-
         String pnr = PnrGenerator.generatePNR();
 
         Booking booking = new Booking();
@@ -70,8 +68,42 @@ public class BookingServiceImpl implements BookingService {
         booking.setContactEmail(email);
         booking.setUserId(userId);          // 🔐 OWNERSHIP
         booking.setStatus(Booking_Status.CONFIRMED);
+        booking.setCreatedAt(LocalDateTime.now());
 
-        bookingRepository.save(booking);
+        try {
+            // 1) Reserve seats atomically in Flight-Service (pessimistic lock)
+            flightClient.reserveSeats(request.getFlightNumber(), request.getSeatsBooked());
+
+            // 2) Persist booking in Booking-Service
+            bookingRepository.save(booking);
+
+            // 3) Notify Email-Service (fire-and-forget)
+            BookingConfirmedEmailRequest emailRequest = BookingConfirmedEmailRequest.builder()
+                    .pnr(pnr)
+                    .contactEmail(booking.getContactEmail())
+                    .primaryPassengerName(booking.getPassengerName())
+                    .flightNumber(booking.getFlightNumber())
+                    .tripType(booking.getTripType())
+                    .seatsBooked(booking.getSeatsBooked())
+                    .mealType(booking.getMealType())
+                    .status(booking.getStatus().name())
+                    .build();
+
+            try {
+                emailClient.sendBookingConfirmation(emailRequest);
+            } catch (Exception ex) {
+                // log and continue in real system; do not fail booking for email issues
+            }
+
+        } catch (Exception ex) {
+            // Best-effort compensation if booking persistence fails after seat reservation
+            try {
+                flightClient.releaseSeats(request.getFlightNumber(), request.getSeatsBooked());
+            } catch (Exception ignored) {
+                // log in real system
+            }
+            throw ex;
+        }
 
         return CreateBookingResponse.builder()
                 .pnr(pnr)
@@ -133,6 +165,9 @@ public class BookingServiceImpl implements BookingService {
         booking.setStatus(Booking_Status.CANCELLED);
         booking.setUpdatedAt(LocalDateTime.now());
         bookingRepository.save(booking);
+
+        // Release seats back to Flight-Service
+        flightClient.releaseSeats(booking.getFlightNumber(), booking.getSeatsBooked());
 
         return CancelBookingResponse.builder()
                 .pnr(pnr)
