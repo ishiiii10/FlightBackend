@@ -50,8 +50,6 @@ public class JwtAuthenticationFilter implements WebFilter {
                         List.of(new SimpleGrantedAuthority("ROLE_" + role))
                 );
 
-        authentication.setAuthenticated(true);
-
         ServerWebExchange mutatedExchange = exchange.mutate()
                 .request(req -> req.headers(headers -> {
                     headers.set("X-User-Id", userId);

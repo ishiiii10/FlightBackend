@@ -2,13 +2,14 @@ package com.chubb.BookingService.exception;
 
 import java.time.LocalDateTime;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import feign.FeignException;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -59,20 +60,37 @@ public class GlobalExceptionHandler {
         );
     }
 
-    // 4. Access / business rule violations
+    // 4. Downstream (Feign) errors – propagate underlying status where possible
+    @ExceptionHandler(FeignException.class)
+    public ResponseEntity<ApiErrorResponse> handleFeign(
+            FeignException ex,
+            HttpServletRequest request
+    ) {
+        HttpStatus status = HttpStatus.resolve(ex.status());
+        if (status == null) {
+            status = HttpStatus.BAD_GATEWAY;
+        }
+        return buildError(
+                status,
+                ex.contentUTF8(),
+                request.getRequestURI()
+        );
+    }
+
+    // 5. Access / business rule violations inside Booking-Service
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiErrorResponse> handleRuntime(
             RuntimeException ex,
             HttpServletRequest request
     ) {
         return buildError(
-                HttpStatus.FORBIDDEN,
+                HttpStatus.BAD_REQUEST,
                 ex.getMessage(),
                 request.getRequestURI()
         );
     }
 
-    // 5. Fallback (last resort)
+    // 6. Fallback (last resort)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleGeneric(
             Exception ex,
