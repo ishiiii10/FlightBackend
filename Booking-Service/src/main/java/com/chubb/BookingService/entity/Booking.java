@@ -77,6 +77,10 @@ public class Booking {
     @Email(message = "Invalid email format")
     private String contactEmail;
 
+    // Round trip fields
+    private String returnFlightNumber;
+    private LocalDate returnTravelDate;
+
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Passenger> passengers;
 }

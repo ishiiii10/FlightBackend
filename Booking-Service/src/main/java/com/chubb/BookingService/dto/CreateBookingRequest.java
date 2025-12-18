@@ -36,4 +36,9 @@ public class CreateBookingRequest {
     @NotBlank(message = "Contact email is required")
     @Email(message = "Invalid email format")
     private String contactEmail;
+
+    // Round trip fields (required only if tripType is ROUND_TRIP)
+    private String returnFlightNumber;
+    private java.time.LocalDate returnTravelDate;
+    private List<PassengerRequest> returnPassengers; // Seats for return flight
 }

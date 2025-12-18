@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @Builder
@@ -28,6 +29,10 @@ public class BookingConfirmedEmailRequest {
     private Meal_Type mealType;
     private Trip_Type tripType;
     private String status;
+    private List<String> seatNumbers;
+    private String returnFlightNumber;
+    private LocalDate returnTravelDate;
+    private List<String> returnSeatNumbers;
 }
 
 

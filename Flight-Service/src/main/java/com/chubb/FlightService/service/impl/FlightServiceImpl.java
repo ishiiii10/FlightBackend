@@ -1,5 +1,6 @@
 package com.chubb.FlightService.service.impl;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -13,15 +14,18 @@ import com.chubb.FlightService.entity.Flight;
 import com.chubb.FlightService.enums.City;
 import com.chubb.FlightService.repository.FlightRepository;
 import com.chubb.FlightService.service.FlightService;
+import com.chubb.FlightService.service.SeatService;
 
 @Service
 @Transactional
 public class FlightServiceImpl implements FlightService {
 
     private final FlightRepository flightRepository;
+    private final SeatService seatService;
 
-    public FlightServiceImpl(FlightRepository flightRepository) {
+    public FlightServiceImpl(FlightRepository flightRepository, SeatService seatService) {
         this.flightRepository = flightRepository;
+        this.seatService = seatService;
     }
 
     @Override
@@ -186,6 +190,80 @@ public class FlightServiceImpl implements FlightService {
 
         flight.setAvailableSeats(newAvailable);
         flightRepository.save(flight);
+    }
+
+    @Override
+    public List<String> getAvailableSeats(String flightNumber, String travelDate) {
+        LocalDate date = LocalDate.parse(travelDate);
+        return seatService.getAvailableSeats(flightNumber, date);
+    }
+
+    @Override
+    public void bookSeats(String flightNumber, String travelDate, List<String> seatNumbers, String bookingId) {
+        LocalDate date = LocalDate.parse(travelDate);
+        
+        // Book seats in Seat table
+        seatService.bookSeats(flightNumber, date, seatNumbers, bookingId);
+        
+        // Update Flight.availableSeats atomically
+        Flight flight = flightRepository.findByFlightNumberForUpdate(flightNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Flight not found: " + flightNumber));
+        
+        int seatsToBook = seatNumbers.size();
+        int currentAvailable = flight.getAvailableSeats();
+        
+        if (currentAvailable < seatsToBook) {
+            throw new IllegalStateException("Insufficient seats available. Available: " + currentAvailable + ", Requested: " + seatsToBook);
+        }
+        
+        flight.setAvailableSeats(currentAvailable - seatsToBook);
+        flightRepository.save(flight);
+    }
+
+    @Override
+    public void releaseSeatsByBookingId(String bookingId) {
+        // Get seats to be released to know which flight and how many
+        List<com.chubb.FlightService.entity.Seat> seats = seatService.getSeatsByBookingId(bookingId);
+        
+        if (seats.isEmpty()) {
+            return; // No seats to release
+        }
+        
+        // Group by flight number and count seats per flight
+        java.util.Map<String, Long> seatsPerFlight = seats.stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                        com.chubb.FlightService.entity.Seat::getFlightNumber,
+                        java.util.stream.Collectors.counting()
+                ));
+        
+        // Release seats in Seat table
+        seatService.releaseSeats(bookingId);
+        
+        // Update Flight.availableSeats for each affected flight
+        for (java.util.Map.Entry<String, Long> entry : seatsPerFlight.entrySet()) {
+            String flightNumber = entry.getKey();
+            int seatsToRelease = entry.getValue().intValue();
+            
+            Flight flight = flightRepository.findByFlightNumberForUpdate(flightNumber)
+                    .orElseThrow(() -> new IllegalArgumentException("Flight not found: " + flightNumber));
+            
+            int currentAvailable = flight.getAvailableSeats();
+            int newAvailable = currentAvailable + seatsToRelease;
+            
+            // Ensure we don't exceed total capacity
+            if (newAvailable > flight.getTotalSeats()) {
+                newAvailable = flight.getTotalSeats();
+            }
+            
+            flight.setAvailableSeats(newAvailable);
+            flightRepository.save(flight);
+        }
+    }
+
+    @Override
+    public void initializeSeats(String flightNumber, String travelDate, int totalSeats) {
+        LocalDate date = LocalDate.parse(travelDate);
+        seatService.initializeSeatsForFlight(flightNumber, date, totalSeats);
     }
 
     private FlightSummaryResponse mapToSummary(Flight flight) {

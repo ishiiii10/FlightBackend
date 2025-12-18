@@ -119,4 +119,40 @@ public class FlightController {
         flightService.releaseSeats(flightNumber, seats);
         return ResponseEntity.ok().build();
     }
+
+    // 🔒 INTERNAL – Seat management endpoints
+    @GetMapping("/internal/{flightNumber}/seats/available")
+    public ResponseEntity<List<String>> getAvailableSeats(
+            @PathVariable String flightNumber,
+            @RequestParam("travelDate") String travelDate
+    ) {
+        return ResponseEntity.ok(flightService.getAvailableSeats(flightNumber, travelDate));
+    }
+
+    @PostMapping("/internal/{flightNumber}/seats/book")
+    public ResponseEntity<Void> bookSeats(
+            @PathVariable String flightNumber,
+            @RequestBody com.chubb.FlightService.dto.BookSeatsRequest request
+    ) {
+        flightService.bookSeats(flightNumber, request.getTravelDate(), request.getSeatNumbers(), request.getBookingId());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/internal/seats/release")
+    public ResponseEntity<Void> releaseSeatsByBookingId(
+            @RequestParam("bookingId") String bookingId
+    ) {
+        flightService.releaseSeatsByBookingId(bookingId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/internal/{flightNumber}/seats/initialize")
+    public ResponseEntity<Void> initializeSeats(
+            @PathVariable String flightNumber,
+            @RequestParam("travelDate") String travelDate,
+            @RequestParam("totalSeats") int totalSeats
+    ) {
+        flightService.initializeSeats(flightNumber, travelDate, totalSeats);
+        return ResponseEntity.ok().build();
+    }
 }

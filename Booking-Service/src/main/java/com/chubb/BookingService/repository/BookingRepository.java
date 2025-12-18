@@ -23,4 +23,10 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             String userId,
             Iterable<Booking_Status> statuses
     );
+
+    List<Booking> findByFlightNumberAndTravelDateAndStatus(
+            String flightNumber,
+            LocalDate travelDate,
+            Booking_Status status
+    );
 }

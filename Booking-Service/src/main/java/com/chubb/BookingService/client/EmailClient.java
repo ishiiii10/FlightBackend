@@ -1,15 +1,16 @@
 package com.chubb.BookingService.client;
 
-import com.chubb.BookingService.dto.BookingConfirmedEmailRequest;
+import java.util.Map;
+
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(name = "EMAIL-SERVICE")
+@FeignClient(name = "EMAILSERVICE")
 public interface EmailClient {
 
     @PostMapping("/emails/booking-confirmed")
-    void sendBookingConfirmation(@RequestBody BookingConfirmedEmailRequest request);
+    void sendBookingConfirmation(@RequestBody Map<String, Object> event);
 }
 
 

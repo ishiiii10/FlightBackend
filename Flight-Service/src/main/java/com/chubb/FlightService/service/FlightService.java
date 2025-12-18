@@ -33,4 +33,10 @@ public interface FlightService {
      * Atomically release seats (on booking cancellation).
      */
     void releaseSeats(String flightNumber, int seatsToRelease);
+
+    // Seat management methods
+    List<String> getAvailableSeats(String flightNumber, String travelDate);
+    void bookSeats(String flightNumber, String travelDate, List<String> seatNumbers, String bookingId);
+    void releaseSeatsByBookingId(String bookingId);
+    void initializeSeats(String flightNumber, String travelDate, int totalSeats);
 }

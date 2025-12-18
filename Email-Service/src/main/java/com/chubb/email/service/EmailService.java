@@ -22,34 +22,32 @@ public class EmailService {
             message.setTo(event.getContactEmail());
             message.setSubject("Flight Ticket Confirmation - PNR " + event.getPnr());
 
-            String body = """
-                    Dear %s,
-                    
-                    Your booking has been confirmed.
-                    
-                    PNR: %s
-                    Flight: %s (%s)
-                    Route: %s -> %s
-                    Departure: %s
-                    Arrival: %s
-                    Seats: %d
-                    Meal: %s
-                    Status: %s
-                    
-                    Thank you for flying with us.
-                    """.formatted(
-                    event.getPrimaryPassengerName(),
-                    event.getPnr(),
-                    event.getFlightNumber(),
-                    event.getAirline(),
-                    event.getSource(),
-                    event.getDestination(),
-                    event.getDepartureDateTime(),
-                    event.getArrivalDateTime(),
-                    event.getSeatsBooked(),
-                    event.getMealType(),
-                    event.getStatus()
-            );
+            StringBuilder bodyBuilder = new StringBuilder();
+            bodyBuilder.append("Dear ").append(event.getPrimaryPassengerName()).append(",\n\n");
+            bodyBuilder.append("Your booking has been confirmed.\n\n");
+            bodyBuilder.append("PNR: ").append(event.getPnr()).append("\n");
+            bodyBuilder.append("Trip Type: ").append(event.getTripType()).append("\n\n");
+            
+            bodyBuilder.append("OUTBOUND FLIGHT:\n");
+            bodyBuilder.append("Flight: ").append(event.getFlightNumber()).append(" (").append(event.getAirline()).append(")\n");
+            bodyBuilder.append("Route: ").append(event.getSource()).append(" -> ").append(event.getDestination()).append("\n");
+            bodyBuilder.append("Travel Date: ").append(event.getTravelDate() != null ? event.getTravelDate() : "").append("\n");
+            bodyBuilder.append("Departure: ").append(event.getDepartureDateTime()).append("\n");
+            bodyBuilder.append("Arrival: ").append(event.getArrivalDateTime()).append("\n");
+            bodyBuilder.append("Seats: ").append(event.getSeatNumbers() != null ? String.join(", ", event.getSeatNumbers()) : "").append("\n");
+            bodyBuilder.append("Meal: ").append(event.getMealType()).append("\n\n");
+            
+            if ("ROUND_TRIP".equals(event.getTripType()) && event.getReturnFlightNumber() != null) {
+                bodyBuilder.append("RETURN FLIGHT:\n");
+                bodyBuilder.append("Flight: ").append(event.getReturnFlightNumber()).append("\n");
+                bodyBuilder.append("Travel Date: ").append(event.getReturnTravelDate() != null ? event.getReturnTravelDate() : "").append("\n");
+                bodyBuilder.append("Seats: ").append(event.getReturnSeatNumbers() != null ? String.join(", ", event.getReturnSeatNumbers()) : "").append("\n\n");
+            }
+            
+            bodyBuilder.append("Status: ").append(event.getStatus()).append("\n\n");
+            bodyBuilder.append("Thank you for flying with us.");
+
+            String body = bodyBuilder.toString();
 
             message.setText(body);
             mailSender.send(message);

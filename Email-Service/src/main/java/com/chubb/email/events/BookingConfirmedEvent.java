@@ -31,4 +31,9 @@ public class BookingConfirmedEvent {
     private Integer seatsBooked;       // 2
     private String mealType;          // VEG_JAIN
     private String status;            // CONFIRMED
+    private java.util.List<String> seatNumbers;
+    private String returnFlightNumber;
+    private String returnTravelDate;
+    private java.util.List<String> returnSeatNumbers;
+    private String travelDate;
 }
