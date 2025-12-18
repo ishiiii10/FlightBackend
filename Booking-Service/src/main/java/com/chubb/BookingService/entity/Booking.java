@@ -1,18 +1,31 @@
 package com.chubb.BookingService.entity;
 
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import lombok.*;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.chubb.BookingService.enums.Booking_Status;
 import com.chubb.BookingService.enums.Gender;
 import com.chubb.BookingService.enums.Meal_Type;
 import com.chubb.BookingService.enums.Trip_Type;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "bookings")
@@ -63,4 +76,7 @@ public class Booking {
     @NotBlank(message = "Contact email is required")
     @Email(message = "Invalid email format")
     private String contactEmail;
+
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Passenger> passengers;
 }

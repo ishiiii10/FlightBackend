@@ -8,6 +8,7 @@ import com.chubb.BookingService.dto.CancelBookingResponse;
 import com.chubb.BookingService.dto.CreateBookingRequest;
 import com.chubb.BookingService.dto.CreateBookingResponse;
 import com.chubb.BookingService.entity.Booking;
+import com.chubb.BookingService.entity.Passenger;
 import com.chubb.BookingService.enums.Booking_Status;
 import com.chubb.BookingService.exception.BookingAlreadyCancelledException;
 import com.chubb.BookingService.exception.BookingNotFoundException;
@@ -38,20 +39,20 @@ public class BookingServiceImpl implements BookingService {
             String email
     ) {
 
+        // Basic duplicate check: same user, flight and date with an active booking
         boolean exists =
-                bookingRepository.existsByFlightNumberAndTravelDateAndPassengerNameAndStatusIn(
+                bookingRepository.existsByFlightNumberAndTravelDateAndUserIdAndStatusIn(
                         request.getFlightNumber(),
                         request.getTravelDate(),
-                        request.getPassengerName(),
+                        userId,
                         java.util.List.of(
                                 Booking_Status.CONFIRMED,
-                                Booking_Status.PENDING,
-                                Booking_Status.CANCELLED
+                                Booking_Status.PENDING
                         )
                 );
 
         if (exists) {
-            throw new RuntimeException("Duplicate booking found");
+            throw new RuntimeException("Duplicate active booking found for this flight/date");
         }
 
         String pnr = PnrGenerator.generatePNR();
@@ -60,15 +61,28 @@ public class BookingServiceImpl implements BookingService {
         booking.setPnr(pnr);
         booking.setFlightNumber(request.getFlightNumber());
         booking.setTravelDate(request.getTravelDate());
-        booking.setPassengerName(request.getPassengerName());
-        booking.setGender(request.getGender());
-        booking.setMealType(request.getMealType());
         booking.setTripType(request.getTripType());
         booking.setSeatsBooked(request.getSeatsBooked());
         booking.setContactEmail(email);
         booking.setUserId(userId);          // 🔐 OWNERSHIP
         booking.setStatus(Booking_Status.CONFIRMED);
         booking.setCreatedAt(LocalDateTime.now());
+
+        // Map passengers list
+        var passengers = request.getPassengers().stream()
+                .map(p -> Passenger.builder()
+                        .name(p.getName())
+                        .gender(p.getGender())
+                        .mealType(p.getMealType())
+                        .booking(booking)
+                        .build())
+                .toList();
+        booking.setPassengers(passengers);
+
+        // For backward compatibility, copy primary passenger details to flat columns
+        booking.setPassengerName(passengers.get(0).getName());
+        booking.setGender(passengers.get(0).getGender());
+        booking.setMealType(passengers.get(0).getMealType());
 
         try {
             // 1) Reserve seats atomically in Flight-Service (pessimistic lock)
@@ -81,11 +95,11 @@ public class BookingServiceImpl implements BookingService {
             BookingConfirmedEmailRequest emailRequest = BookingConfirmedEmailRequest.builder()
                     .pnr(pnr)
                     .contactEmail(booking.getContactEmail())
-                    .primaryPassengerName(booking.getPassengerName())
+                    .primaryPassengerName(booking.getPassengers().get(0).getName())
                     .flightNumber(booking.getFlightNumber())
                     .tripType(booking.getTripType())
                     .seatsBooked(booking.getSeatsBooked())
-                    .mealType(booking.getMealType())
+                    .mealType(booking.getPassengers().get(0).getMealType())
                     .status(booking.getStatus().name())
                     .build();
 

@@ -1,14 +1,14 @@
 package com.chubb.BookingService.repository;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import com.chubb.BookingService.entity.Booking;
 import com.chubb.BookingService.enums.Booking_Status;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
@@ -17,10 +17,10 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findByUserId(String userId);
 
-    boolean existsByFlightNumberAndTravelDateAndPassengerNameAndStatusIn(
+    boolean existsByFlightNumberAndTravelDateAndUserIdAndStatusIn(
             String flightNumber,
             LocalDate travelDate,
-            String passengerName,
+            String userId,
             Iterable<Booking_Status> statuses
     );
 }

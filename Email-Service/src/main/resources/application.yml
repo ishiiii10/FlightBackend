@@ -1,16 +1,4 @@
 spring:
-  application:
-    name: EMAILSERVICE
-
-server:
-  port: 8084
-
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka
-    register-with-eureka: true
-    fetch-registry: true
-  instance:
-    prefer-ip-address: true
-    hostname: localhost
+  config:
+    activate:
+      on-profile: legacy-yml-not-used

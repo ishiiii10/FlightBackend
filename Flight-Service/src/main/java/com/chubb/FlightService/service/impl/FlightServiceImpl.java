@@ -1,5 +1,10 @@
 package com.chubb.FlightService.service.impl;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.chubb.FlightService.dto.CreateFlightRequest;
 import com.chubb.FlightService.dto.CreateFlightResponse;
 import com.chubb.FlightService.dto.FlightSummaryResponse;
@@ -8,11 +13,6 @@ import com.chubb.FlightService.entity.Flight;
 import com.chubb.FlightService.enums.City;
 import com.chubb.FlightService.repository.FlightRepository;
 import com.chubb.FlightService.service.FlightService;
-
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
@@ -106,6 +106,50 @@ public class FlightServiceImpl implements FlightService {
                 .availableSeats(flight.getAvailableSeats())
                 .price(flight.getPrice())
                 .build();
+    }
+
+    @Override
+    public void updateFlight(Long id, CreateFlightRequest request, String role) {
+
+        if (!"ADMIN".equals(role)) {
+            throw new RuntimeException("Only ADMIN can update flights");
+        }
+
+        Flight flight = flightRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Flight not found with ID: " + id));
+
+        if (request.getArrivalTime().isBefore(request.getDepartureTime())) {
+            throw new IllegalArgumentException("Arrival time cannot be before departure time");
+        }
+
+        if (request.getAvailableSeats() > request.getTotalSeats()) {
+            throw new IllegalArgumentException("Available seats cannot be more than total seats");
+        }
+
+        flight.setFlightNumber(request.getFlightNumber());
+        flight.setAirline(request.getAirline());
+        flight.setSource(request.getSource());
+        flight.setDestination(request.getDestination());
+        flight.setDepartureTime(request.getDepartureTime());
+        flight.setArrivalTime(request.getArrivalTime());
+        flight.setTotalSeats(request.getTotalSeats());
+        flight.setAvailableSeats(request.getAvailableSeats());
+        flight.setPrice(request.getPrice());
+
+        flightRepository.save(flight);
+    }
+
+    @Override
+    public void deleteFlight(Long id, String role) {
+        if (!"ADMIN".equals(role)) {
+            throw new RuntimeException("Only ADMIN can delete flights");
+        }
+
+        if (!flightRepository.existsById(id)) {
+            throw new IllegalArgumentException("Flight not found with ID: " + id);
+        }
+
+        flightRepository.deleteById(id);
     }
 
     @Override

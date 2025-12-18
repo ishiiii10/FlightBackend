@@ -15,9 +15,9 @@ import java.util.Optional;
 @Repository
 public interface FlightRepository extends JpaRepository<Flight, Long> {
 
-    List<Flight> findBySourceAndDestination(City source, City destination);
+	List<Flight> findBySourceAndDestination(City source, City destination);
 
-    Optional<Flight> findByFlightNumber(String flightNumber);
+	Optional<Flight> findByFlightNumber(String flightNumber);
 
     // Pessimistic lock for atomic seat updates
     @Lock(LockModeType.PESSIMISTIC_WRITE)

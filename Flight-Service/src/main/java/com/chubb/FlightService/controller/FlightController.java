@@ -1,18 +1,28 @@
 package com.chubb.FlightService.controller;
 
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.chubb.FlightService.dto.CreateFlightRequest;
 import com.chubb.FlightService.dto.CreateFlightResponse;
 import com.chubb.FlightService.dto.FlightSummaryResponse;
 import com.chubb.FlightService.dto.InternalFlightResponse;
 import com.chubb.FlightService.enums.City;
 import com.chubb.FlightService.service.FlightService;
+
 import jakarta.validation.Valid;
-
-import java.util.List;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/flights")
@@ -34,6 +44,27 @@ public class FlightController {
                 flightService.createFlight(request, role);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    // 🔐 ADMIN ONLY – update flight
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> updateFlight(
+            @RequestHeader("X-User-Role") String role,
+            @PathVariable Long id,
+            @Valid @RequestBody CreateFlightRequest request
+    ) {
+        flightService.updateFlight(id, request, role);
+        return ResponseEntity.noContent().build();
+    }
+
+    // 🔐 ADMIN ONLY – delete flight
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteFlight(
+            @RequestHeader("X-User-Role") String role,
+            @PathVariable Long id
+    ) {
+        flightService.deleteFlight(id, role);
+        return ResponseEntity.noContent().build();
     }
 
     // 🌍 PUBLIC
