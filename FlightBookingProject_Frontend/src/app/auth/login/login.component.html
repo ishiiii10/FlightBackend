@@ -1,0 +1,79 @@
+<div class="container">
+  <div class="two-column">
+    <!-- Left: Login Form -->
+    <div class="form-section">
+      <div class="card">
+        <h1>LOGIN</h1>
+        <p class="subtitle">Welcome back! Sign in to continue your journey.</p>
+        
+        <form (ngSubmit)="onLogin()" class="login-form">
+          <div class="form-group">
+            <label class="form-label" for="email">Email</label>
+            <input 
+              type="email" 
+              id="email" 
+              class="form-input" 
+              [(ngModel)]="loginData.email"
+              name="email"
+              placeholder="your.email@example.com"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <input 
+              type="password" 
+              id="password" 
+              class="form-input" 
+              [(ngModel)]="loginData.password"
+              name="password"
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+
+          <button type="submit" class="btn-primary">Sign In</button>
+
+          <p class="form-footer">
+            Don't have an account? <a routerLink="/register">Register here</a>
+          </p>
+
+          <div *ngIf="errorMessage" class="error-message">
+            {{ errorMessage }}
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right: Promotional Content -->
+    <div class="promo-section">
+      <div class="promo-content">
+        <h2>Catch your next cloud-hop</h2>
+        <p class="promo-text">
+          NimbusAir scans routes across the globe so you can jump between cities, 
+          coasts and crazy layovers in a few clicks.
+        </p>
+        <ul class="promo-features">
+          <li>Instant results across popular and off-beat routes</li>
+          <li>Clean, distraction-free search experience</li>
+          <li>Perfect for spontaneous, last-minute adventures</li>
+        </ul>
+        <div class="airplane-illustration">
+          <svg width="200" height="120" viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 60 L180 60" stroke="var(--lighter-blue)" stroke-width="2"/>
+            <path d="M40 50 Q50 40 60 50 Q70 60 80 50 Q90 40 100 50 Q110 60 120 50 Q130 40 140 50 Q150 60 160 50" 
+                  stroke="var(--lighter-blue)" stroke-width="2" fill="none"/>
+            <circle cx="30" cy="60" r="3" fill="var(--lighter-blue)"/>
+            <circle cx="50" cy="60" r="3" fill="var(--lighter-blue)"/>
+            <circle cx="70" cy="60" r="3" fill="var(--lighter-blue)"/>
+            <circle cx="90" cy="60" r="3" fill="var(--lighter-blue)"/>
+            <circle cx="110" cy="60" r="3" fill="var(--lighter-blue)"/>
+            <path d="M10 60 L20 55 L20 65 Z" fill="var(--lighter-blue)"/>
+            <path d="M180 60 L190 55 L190 65 Z" fill="var(--lighter-blue)"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

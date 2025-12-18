@@ -1,0 +1,97 @@
+<div class="container">
+  <div class="two-column">
+    <!-- Left: Register Form -->
+    <div class="form-section">
+      <div class="card">
+        <h1>REGISTER</h1>
+        <p class="subtitle">Join NimbusAir and start your journey today.</p>
+        
+        <form (ngSubmit)="onRegister()" class="register-form">
+          <div class="form-group">
+            <label class="form-label" for="email">Email</label>
+            <input 
+              type="email" 
+              id="email" 
+              class="form-input" 
+              [(ngModel)]="registerData.email"
+              name="email"
+              placeholder="your.email@example.com"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <input 
+              type="password" 
+              id="password" 
+              class="form-input" 
+              [(ngModel)]="registerData.password"
+              name="password"
+              placeholder="Create a strong password"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="role">I want to</label>
+            <select 
+              id="role" 
+              class="form-input" 
+              [(ngModel)]="registerData.role"
+              name="role"
+              required
+            >
+              <option value="CUSTOMER">Book flights</option>
+              <option value="ADMIN">Manage flights</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn-primary">Create Account</button>
+
+          <p class="form-footer">
+            Already have an account? <a routerLink="/login">Login here</a>
+          </p>
+
+          <div *ngIf="errorMessage" class="error-message">
+            {{ errorMessage }}
+          </div>
+          <div *ngIf="successMessage" class="success-message">
+            {{ successMessage }}
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right: Promotional Content -->
+    <div class="promo-section">
+      <div class="promo-content">
+        <h2>Start your adventure</h2>
+        <p class="promo-text">
+          Create your NimbusAir account and unlock a world of travel possibilities. 
+          Book flights instantly, manage your bookings, and discover amazing destinations.
+        </p>
+        <ul class="promo-features">
+          <li>Quick and easy registration process</li>
+          <li>Secure account management</li>
+          <li>Access to exclusive deals and offers</li>
+          <li>Manage all your bookings in one place</li>
+        </ul>
+        <div class="airplane-illustration">
+          <svg width="200" height="120" viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 60 L180 60" stroke="var(--lighter-blue)" stroke-width="2"/>
+            <path d="M40 50 Q50 40 60 50 Q70 60 80 50 Q90 40 100 50 Q110 60 120 50 Q130 40 140 50 Q150 60 160 50" 
+                  stroke="var(--lighter-blue)" stroke-width="2" fill="none"/>
+            <circle cx="30" cy="60" r="3" fill="var(--lighter-blue)"/>
+            <circle cx="50" cy="60" r="3" fill="var(--lighter-blue)"/>
+            <circle cx="70" cy="60" r="3" fill="var(--lighter-blue)"/>
+            <circle cx="90" cy="60" r="3" fill="var(--lighter-blue)"/>
+            <circle cx="110" cy="60" r="3" fill="var(--lighter-blue)"/>
+            <path d="M10 60 L20 55 L20 65 Z" fill="var(--lighter-blue)"/>
+            <path d="M180 60 L190 55 L190 65 Z" fill="var(--lighter-blue)"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

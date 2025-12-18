@@ -1,0 +1,110 @@
+.form-section {
+  display: flex;
+  align-items: center;
+}
+
+.card {
+  width: 100%;
+}
+
+h1 {
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: var(--text-gray);
+  margin-bottom: 2rem;
+  font-size: 16px;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-footer {
+  text-align: center;
+  margin-top: 1rem;
+  color: var(--text-gray);
+}
+
+.error-message {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-top: 1rem;
+}
+
+.success-message {
+  background: #d1fae5;
+  color: #065f46;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-top: 1rem;
+}
+
+.promo-section {
+  display: flex;
+  align-items: center;
+  padding-left: 2rem;
+}
+
+.promo-content {
+  max-width: 500px;
+}
+
+.promo-content h2 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: var(--text-dark);
+}
+
+.promo-text {
+  font-size: 16px;
+  line-height: 1.8;
+  margin-bottom: 2rem;
+  color: var(--text-gray);
+}
+
+.promo-features {
+  list-style: none;
+  margin-bottom: 2rem;
+}
+
+.promo-features li {
+  padding: 0.75rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+  color: var(--text-gray);
+  font-size: 16px;
+}
+
+.promo-features li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--light-blue);
+  font-weight: bold;
+}
+
+.airplane-illustration {
+  margin-top: 2rem;
+  opacity: 0.7;
+}
+
+@media (max-width: 968px) {
+  .promo-section {
+    padding-left: 0;
+    padding-top: 2rem;
+  }
+}
+
