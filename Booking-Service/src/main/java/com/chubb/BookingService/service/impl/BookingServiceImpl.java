@@ -7,8 +7,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.chubb.BookingService.client.EmailClient;
 import com.chubb.BookingService.client.FlightClient;
@@ -33,6 +36,8 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
+
+    private static final Logger log = LoggerFactory.getLogger(BookingServiceImpl.class);
 
     private final BookingRepository bookingRepository;
     private final FlightClient flightClient;
@@ -314,42 +319,20 @@ public class BookingServiceImpl implements BookingService {
         // Save booking
         bookingRepository.save(booking);
 
-        // Send email notifications (fire-and-forget)
-        try {
-            var flightDetailsForEmail = flightClient.getFlightDetails(request.getFlightNumber());
-            
-            // Build email request matching BookingConfirmedEvent structure
-            BookingConfirmedEmailRequest emailRequest = BookingConfirmedEmailRequest.builder()
-                    .pnr(pnr)
-                    .contactEmail(booking.getContactEmail())
-                    .primaryPassengerName(booking.getPassengers().get(0).getName())
-                    .flightNumber(booking.getFlightNumber())
-                    .airline(flightDetailsForEmail.getAirline() != null ? flightDetailsForEmail.getAirline() : "")
-                    .source(flightDetailsForEmail.getSource() != null ? flightDetailsForEmail.getSource() : "")
-                    .destination(flightDetailsForEmail.getDestination() != null ? flightDetailsForEmail.getDestination() : "")
-                    .departureDateTime(flightDetailsForEmail.getDepartureTime() != null ? flightDetailsForEmail.getDepartureTime().toString() : "")
-                    .arrivalDateTime(flightDetailsForEmail.getArrivalTime() != null ? flightDetailsForEmail.getArrivalTime().toString() : "")
-                    .travelDate(booking.getTravelDate())
-                    .tripType(booking.getTripType())
-                    .seatsBooked(booking.getSeatsBooked())
-                    .mealType(booking.getPassengers().get(0).getMealType())
-                    .status(booking.getStatus().name())
-                    .seatNumbers(outboundSeatNumbers)
-                    .returnFlightNumber(request.getReturnFlightNumber())
-                    .returnTravelDate(request.getReturnTravelDate())
-                    .returnSeatNumbers(returnSeatNumbers)
-                    .build();
-
-            // Send to booking owner - convert to event structure for Email-Service
-            sendEmailNotification(emailRequest);
-
-            // Send to admin (get admin email from config or user service)
-            emailRequest.setContactEmail("admin@flightbooking.com"); // TODO: Get from config or user service
-            sendEmailNotification(emailRequest);
-        } catch (Exception ex) {
-            // Log but don't fail booking
-            System.err.println("Failed to send email notification: " + ex.getMessage());
+        // Send email notifications asynchronously (fire-and-forget)
+        // Calculate total fare for email
+        BigDecimal totalFare = flightDetails.getPrice().multiply(BigDecimal.valueOf(booking.getSeatsBooked()));
+        if (request.getTripType() == Trip_Type.ROUND_TRIP && request.getReturnFlightNumber() != null) {
+            try {
+                var returnFlightDetails = flightClient.getFlightDetails(request.getReturnFlightNumber());
+                totalFare = totalFare.add(returnFlightDetails.getPrice().multiply(BigDecimal.valueOf(booking.getSeatsBooked())));
+            } catch (Exception e) {
+                log.warn("Could not fetch return flight price for email: {}", e.getMessage());
+            }
         }
+        
+        // Send email asynchronously to avoid blocking booking response
+        sendBookingConfirmationEmailAsync(booking, flightDetails, outboundSeatNumbers, returnSeatNumbers, totalFare, request);
 
         return CreateBookingResponse.builder()
                 .pnr(pnr)
@@ -466,26 +449,164 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = bookingRepository.findByPnr(pnr)
                 .orElseThrow(() -> new BookingNotFoundException(pnr));
 
+        // Security check: User can only cancel their own bookings
         if (!booking.getUserId().equals(userId)) {
             throw new RuntimeException("Access denied to cancel this booking");
         }
 
+        // Validation: Booking must be CONFIRMED to be cancelled
         if (booking.getStatus() == Booking_Status.CANCELLED) {
             throw new BookingAlreadyCancelledException(pnr);
         }
 
+        if (booking.getStatus() != Booking_Status.CONFIRMED) {
+            throw new IllegalArgumentException("Only CONFIRMED bookings can be cancelled");
+        }
+
+        // Validation: Check 24-hour cancellation rule
+        try {
+            FlightDetailsResponse flightDetails = flightClient.getFlightDetails(booking.getFlightNumber());
+            LocalDateTime departureTime = flightDetails.getDepartureTime();
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime cancellationDeadline = departureTime.minusHours(24);
+
+            // Check if flight has already departed
+            if (now.isAfter(departureTime) || now.isEqual(departureTime)) {
+                throw new IllegalArgumentException("Cannot cancel booking: Flight has already departed");
+            }
+
+            // Check if cancellation is within 24 hours of departure
+            if (now.isAfter(cancellationDeadline)) {
+                throw new IllegalArgumentException("Cannot cancel booking: Cancellation must be done at least 24 hours before departure");
+            }
+        } catch (IllegalArgumentException e) {
+            // Re-throw validation errors
+            throw e;
+        } catch (Exception e) {
+            log.warn("Could not validate flight departure time for cancellation: {}", e.getMessage());
+            // Continue with cancellation if flight details can't be fetched
+            // In production, you might want to be more strict here
+        }
+
+        // Update booking status
         booking.setStatus(Booking_Status.CANCELLED);
         booking.setUpdatedAt(LocalDateTime.now());
         bookingRepository.save(booking);
 
         // Release seats back to Flight-Service (handles both outbound and return)
-        flightClient.releaseSeatsByBookingId(pnr);
+        try {
+            flightClient.releaseSeatsByBookingId(pnr);
+            log.info("Seats released for cancelled booking PNR: {}", pnr);
+        } catch (Exception e) {
+            log.error("Failed to release seats for cancelled booking PNR: {}: {}", pnr, e.getMessage(), e);
+            // Don't fail cancellation if seat release fails - seats can be manually released
+        }
+
+        // Send cancellation email asynchronously
+        sendCancellationEmailAsync(booking);
 
         return CancelBookingResponse.builder()
                 .pnr(pnr)
                 .status("CANCELLED")
                 .message("Booking cancelled successfully")
                 .build();
+    }
+
+    /**
+     * Asynchronously send cancellation confirmation email
+     */
+    @Async
+    private void sendCancellationEmailAsync(Booking booking) {
+        try {
+            FlightDetailsResponse flightDetails = flightClient.getFlightDetails(booking.getFlightNumber());
+            
+            // Get seat numbers
+            List<String> seatNumbers = booking.getPassengers() != null ?
+                    booking.getPassengers().stream()
+                            .map(Passenger::getSeatNumber)
+                            .collect(Collectors.toList()) :
+                    new ArrayList<>();
+            
+            // Calculate total fare
+            BigDecimal totalFare = flightDetails.getPrice().multiply(BigDecimal.valueOf(booking.getSeatsBooked()));
+            if (booking.getReturnFlightNumber() != null && booking.getReturnTravelDate() != null) {
+                try {
+                    FlightDetailsResponse returnFlightDetails = flightClient.getFlightDetails(booking.getReturnFlightNumber());
+                    totalFare = totalFare.add(returnFlightDetails.getPrice().multiply(BigDecimal.valueOf(booking.getSeatsBooked())));
+                } catch (Exception e) {
+                    log.warn("Could not fetch return flight price for cancellation email: {}", e.getMessage());
+                }
+            }
+
+            // Build cancellation email request
+            java.util.Map<String, Object> cancellationEvent = new java.util.HashMap<>();
+            cancellationEvent.put("pnr", booking.getPnr());
+            cancellationEvent.put("contactEmail", booking.getContactEmail());
+            cancellationEvent.put("primaryPassengerName", booking.getPassengerName());
+            cancellationEvent.put("flightNumber", booking.getFlightNumber());
+            cancellationEvent.put("airline", flightDetails.getAirline() != null ? flightDetails.getAirline() : "");
+            cancellationEvent.put("source", flightDetails.getSource() != null ? flightDetails.getSource() : "");
+            cancellationEvent.put("destination", flightDetails.getDestination() != null ? flightDetails.getDestination() : "");
+            cancellationEvent.put("departureDateTime", flightDetails.getDepartureTime() != null ? flightDetails.getDepartureTime().toString() : "");
+            cancellationEvent.put("arrivalDateTime", flightDetails.getArrivalTime() != null ? flightDetails.getArrivalTime().toString() : "");
+            cancellationEvent.put("travelDate", booking.getTravelDate() != null ? booking.getTravelDate().toString() : "");
+            cancellationEvent.put("seatNumbers", seatNumbers);
+            cancellationEvent.put("totalFare", totalFare.toString());
+            cancellationEvent.put("returnFlightNumber", booking.getReturnFlightNumber());
+            cancellationEvent.put("returnTravelDate", booking.getReturnTravelDate() != null ? booking.getReturnTravelDate().toString() : null);
+
+            // Send cancellation email
+            emailClient.sendBookingCancellation(cancellationEvent);
+            log.info("Cancellation email sent successfully to {}", booking.getContactEmail());
+        } catch (Exception ex) {
+            // Log but don't fail cancellation - email failures should not roll back cancellation
+            log.error("Failed to send cancellation email to {}: {}", booking.getContactEmail(), ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * Asynchronously send booking confirmation email to avoid blocking booking response
+     */
+    @Async
+    private void sendBookingConfirmationEmailAsync(
+            Booking booking,
+            FlightDetailsResponse flightDetails,
+            List<String> outboundSeatNumbers,
+            List<String> returnSeatNumbers,
+            BigDecimal totalFare,
+            CreateBookingRequest request
+    ) {
+        try {
+            // Build email request with total fare
+            BookingConfirmedEmailRequest emailRequest = BookingConfirmedEmailRequest.builder()
+                    .pnr(booking.getPnr())
+                    .contactEmail(booking.getContactEmail())
+                    .primaryPassengerName(booking.getPassengers().get(0).getName())
+                    .flightNumber(booking.getFlightNumber())
+                    .airline(flightDetails.getAirline() != null ? flightDetails.getAirline() : "")
+                    .source(flightDetails.getSource() != null ? flightDetails.getSource() : "")
+                    .destination(flightDetails.getDestination() != null ? flightDetails.getDestination() : "")
+                    .departureDateTime(flightDetails.getDepartureTime() != null ? flightDetails.getDepartureTime().toString() : "")
+                    .arrivalDateTime(flightDetails.getArrivalTime() != null ? flightDetails.getArrivalTime().toString() : "")
+                    .travelDate(booking.getTravelDate())
+                    .tripType(booking.getTripType())
+                    .seatsBooked(booking.getSeatsBooked())
+                    .mealType(booking.getPassengers().get(0).getMealType())
+                    .status(booking.getStatus().name())
+                    .seatNumbers(outboundSeatNumbers)
+                    .returnFlightNumber(request.getReturnFlightNumber())
+                    .returnTravelDate(request.getReturnTravelDate())
+                    .returnSeatNumbers(returnSeatNumbers)
+                    .totalFare(totalFare)
+                    .build();
+
+            // Send to booking owner
+            sendEmailNotification(emailRequest);
+            log.info("Booking confirmation email sent successfully to {}", booking.getContactEmail());
+        } catch (Exception ex) {
+            // Log but don't fail booking - email failures should not roll back successful bookings
+            log.error("Failed to send booking confirmation email to {}: {}", booking.getContactEmail(), ex.getMessage(), ex);
+        }
     }
 
     /**
@@ -515,6 +636,7 @@ public class BookingServiceImpl implements BookingService {
         eventMap.put("returnFlightNumber", request.getReturnFlightNumber());
         eventMap.put("returnTravelDate", request.getReturnTravelDate() != null ? request.getReturnTravelDate().toString() : null);
         eventMap.put("returnSeatNumbers", request.getReturnSeatNumbers());
+        eventMap.put("totalFare", request.getTotalFare() != null ? request.getTotalFare().toString() : "0.00");
         
         // Send using Feign client
         emailClient.sendBookingConfirmation(eventMap);

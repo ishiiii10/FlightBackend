@@ -36,4 +36,5 @@ public class BookingConfirmedEvent {
     private String returnTravelDate;
     private java.util.List<String> returnSeatNumbers;
     private String travelDate;
+    private String totalFare; // Total fare as string for email display
 }

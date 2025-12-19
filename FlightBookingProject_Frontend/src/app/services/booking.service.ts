@@ -47,6 +47,12 @@ export interface BookingHistory {
   returnTravelDate?: string;
 }
 
+export interface CancelBookingResponse {
+  pnr: string;
+  status: string;
+  message: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -72,5 +78,10 @@ export class BookingService {
   getBookingHistory(): Observable<BookingHistory[]> {
     const headers = this.getHeaders();
     return this.http.get<BookingHistory[]>(`${API_URL}/bookings/my`, { headers });
+  }
+
+  cancelBooking(pnr: string): Observable<CancelBookingResponse> {
+    const headers = this.getHeaders();
+    return this.http.delete<CancelBookingResponse>(`${API_URL}/bookings/cancel/${pnr}`, { headers });
   }
 }

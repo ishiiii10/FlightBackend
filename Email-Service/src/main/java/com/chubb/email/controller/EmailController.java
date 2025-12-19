@@ -23,6 +23,12 @@ public class EmailController {
         emailService.sendBookingConfirmation(event);
         return ResponseEntity.accepted().build();
     }
+
+    @PostMapping("/booking-cancelled")
+    public ResponseEntity<Void> sendBookingCancellation(@RequestBody java.util.Map<String, Object> event) {
+        emailService.sendBookingCancellation(event);
+        return ResponseEntity.accepted().build();
+    }
 }
 
 

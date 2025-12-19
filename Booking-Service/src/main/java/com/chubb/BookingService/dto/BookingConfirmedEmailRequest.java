@@ -1,12 +1,13 @@
 package com.chubb.BookingService.dto;
 
-import com.chubb.BookingService.enums.Meal_Type;
-import com.chubb.BookingService.enums.Trip_Type;
-import lombok.Builder;
-import lombok.Data;
-
 import java.time.LocalDate;
 import java.util.List;
+
+import com.chubb.BookingService.enums.Meal_Type;
+import com.chubb.BookingService.enums.Trip_Type;
+
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder
@@ -33,6 +34,7 @@ public class BookingConfirmedEmailRequest {
     private String returnFlightNumber;
     private LocalDate returnTravelDate;
     private List<String> returnSeatNumbers;
+    private java.math.BigDecimal totalFare;
 }
 
 

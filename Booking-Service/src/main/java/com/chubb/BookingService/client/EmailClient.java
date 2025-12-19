@@ -11,6 +11,9 @@ public interface EmailClient {
 
     @PostMapping("/emails/booking-confirmed")
     void sendBookingConfirmation(@RequestBody Map<String, Object> event);
+
+    @PostMapping("/emails/booking-cancelled")
+    void sendBookingCancellation(@RequestBody Map<String, Object> event);
 }
 
 
