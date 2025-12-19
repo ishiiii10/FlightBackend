@@ -2,13 +2,28 @@
   <div class="container">
     <div class="navbar-content">
       <div class="logo">
-        <span class="logo-icon">✈</span>
-        <span class="logo-text">NIMBUSAIR</span>
+        <a routerLink="/search" class="logo-link">
+          <span class="logo-icon">✈</span>
+          <span class="logo-text">NIMBUSAIR</span>
+        </a>
       </div>
       <nav class="nav-links">
         <a routerLink="/search" routerLinkActive="active">HOME</a>
-        <a routerLink="/login" routerLinkActive="active">LOGIN</a>
-        <a routerLink="/register" routerLinkActive="active">REGISTER</a>
+        
+        <ng-container *ngIf="isAuthenticated; else unauthenticatedLinks">
+          <a routerLink="/profile" routerLinkActive="active">PROFILE</a>
+          <a routerLink="/booking-history" routerLinkActive="active">BOOKING HISTORY</a>
+          <div class="user-info">
+            <span class="user-email">{{ userEmail }}</span>
+            <span *ngIf="isAdmin" class="admin-badge">ADMIN</span>
+            <button class="logout-btn" (click)="logout()">LOGOUT</button>
+          </div>
+        </ng-container>
+        
+        <ng-template #unauthenticatedLinks>
+          <a routerLink="/login" routerLinkActive="active">LOGIN</a>
+          <a routerLink="/register" routerLinkActive="active">REGISTER</a>
+        </ng-template>
       </nav>
     </div>
   </div>

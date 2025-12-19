@@ -31,6 +31,22 @@ interface CreateBookingResponse {
   message: string;
 }
 
+export interface BookingHistory {
+  pnr: string;
+  status: string;
+  flightNumber: string;
+  source: string;
+  destination: string;
+  travelDate: string;
+  bookingDate: string;
+  passengerName: string;
+  seatsBooked: number;
+  seatNumbers: string[];
+  totalAmount: number;
+  returnFlightNumber?: string;
+  returnTravelDate?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -51,5 +67,10 @@ export class BookingService {
   createBooking(booking: CreateBookingRequest): Observable<CreateBookingResponse> {
     const headers = this.getHeaders();
     return this.http.post<CreateBookingResponse>(`${API_URL}/bookings`, booking, { headers });
+  }
+
+  getBookingHistory(): Observable<BookingHistory[]> {
+    const headers = this.getHeaders();
+    return this.http.get<BookingHistory[]>(`${API_URL}/bookings/my`, { headers });
   }
 }

@@ -1,5 +1,7 @@
 package com.chubb.BookingService.service.impl;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +17,7 @@ import com.chubb.BookingService.dto.BookingSummaryResponse;
 import com.chubb.BookingService.dto.CancelBookingResponse;
 import com.chubb.BookingService.dto.CreateBookingRequest;
 import com.chubb.BookingService.dto.CreateBookingResponse;
+import com.chubb.BookingService.dto.FlightDetailsResponse;
 import com.chubb.BookingService.entity.Booking;
 import com.chubb.BookingService.entity.Passenger;
 import com.chubb.BookingService.enums.Booking_Status;
@@ -377,15 +380,83 @@ public class BookingServiceImpl implements BookingService {
     public List<BookingSummaryResponse> getMyBookings(String userId) {
         return bookingRepository.findByUserId(userId)
                 .stream()
-                .map(booking -> BookingSummaryResponse.builder()
-                        .pnr(booking.getPnr())
-                        .status(booking.getStatus())
-                        .flightNumber(booking.getFlightNumber())
-                        .travelDate(booking.getTravelDate())
-                        .passengerName(booking.getPassengerName())
-                        .seatsBooked(booking.getSeatsBooked())
-                        .build()
-                )
+                .map(booking -> {
+                    try {
+                        // Fetch flight details to get source, destination, and price
+                        FlightDetailsResponse flightDetails = flightClient.getFlightDetails(booking.getFlightNumber());
+                        
+                        // Get seat numbers from passengers
+                        List<String> seatNumbers = booking.getPassengers() != null ?
+                                booking.getPassengers().stream()
+                                        .map(Passenger::getSeatNumber)
+                                        .collect(Collectors.toList()) :
+                                new ArrayList<>();
+                        
+                        // Calculate total amount (price per seat * number of seats)
+                        BigDecimal totalAmount = flightDetails.getPrice() != null ?
+                                flightDetails.getPrice().multiply(BigDecimal.valueOf(booking.getSeatsBooked())) :
+                                BigDecimal.ZERO;
+                        
+                        // Handle return flight details if round trip
+                        String returnFlightNumber = booking.getReturnFlightNumber();
+                        LocalDate returnTravelDate = booking.getReturnTravelDate();
+                        
+                        // If round trip, add return flight price to total
+                        if (returnFlightNumber != null && returnTravelDate != null) {
+                            try {
+                                FlightDetailsResponse returnFlightDetails = flightClient.getFlightDetails(returnFlightNumber);
+                                if (returnFlightDetails.getPrice() != null) {
+                                    totalAmount = totalAmount.add(
+                                            returnFlightDetails.getPrice().multiply(BigDecimal.valueOf(booking.getSeatsBooked()))
+                                    );
+                                }
+                            } catch (Exception e) {
+                                // Log but don't fail if return flight details can't be fetched
+                                System.err.println("Could not fetch return flight details: " + e.getMessage());
+                            }
+                        }
+                        
+                        return BookingSummaryResponse.builder()
+                                .pnr(booking.getPnr())
+                                .status(booking.getStatus())
+                                .flightNumber(booking.getFlightNumber())
+                                .source(flightDetails.getSource())
+                                .destination(flightDetails.getDestination())
+                                .travelDate(booking.getTravelDate())
+                                .bookingDate(booking.getCreatedAt() != null ? booking.getCreatedAt() : LocalDateTime.now())
+                                .passengerName(booking.getPassengerName())
+                                .seatsBooked(booking.getSeatsBooked())
+                                .seatNumbers(seatNumbers)
+                                .totalAmount(totalAmount)
+                                .returnFlightNumber(returnFlightNumber)
+                                .returnTravelDate(returnTravelDate)
+                                .build();
+                    } catch (Exception e) {
+                        // If flight details can't be fetched, return basic info
+                        System.err.println("Error fetching flight details for booking " + booking.getPnr() + ": " + e.getMessage());
+                        List<String> seatNumbers = booking.getPassengers() != null ?
+                                booking.getPassengers().stream()
+                                        .map(Passenger::getSeatNumber)
+                                        .collect(Collectors.toList()) :
+                                new ArrayList<>();
+                        
+                        return BookingSummaryResponse.builder()
+                                .pnr(booking.getPnr())
+                                .status(booking.getStatus())
+                                .flightNumber(booking.getFlightNumber())
+                                .source("N/A")
+                                .destination("N/A")
+                                .travelDate(booking.getTravelDate())
+                                .bookingDate(booking.getCreatedAt() != null ? booking.getCreatedAt() : LocalDateTime.now())
+                                .passengerName(booking.getPassengerName())
+                                .seatsBooked(booking.getSeatsBooked())
+                                .seatNumbers(seatNumbers)
+                                .totalAmount(BigDecimal.ZERO)
+                                .returnFlightNumber(booking.getReturnFlightNumber())
+                                .returnTravelDate(booking.getReturnTravelDate())
+                                .build();
+                    }
+                })
                 .toList();
     }
 

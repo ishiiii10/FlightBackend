@@ -1,1 +1,93 @@
-<p>view-history works!</p>
+<div class="booking-history-container">
+  <div class="history-header">
+    <h2>Booking History</h2>
+    <a routerLink="/profile" class="back-link">← Back to Profile</a>
+  </div>
+
+  <div *ngIf="loading" class="loading">
+    <p>Loading booking history...</p>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    <p>{{ errorMessage }}</p>
+  </div>
+
+  <div *ngIf="!loading && !errorMessage">
+    <div *ngIf="bookings.length === 0" class="no-bookings">
+      <p>You don't have any bookings yet.</p>
+      <a routerLink="/search" class="btn btn-primary">Search Flights</a>
+    </div>
+
+    <div *ngIf="bookings.length > 0" class="bookings-list">
+      <div *ngFor="let booking of bookings" class="booking-card">
+        <div class="booking-header">
+          <div class="booking-pnr">
+            <span class="pnr-label">PNR:</span>
+            <span class="pnr-value">{{ booking.pnr }}</span>
+          </div>
+          <span class="status-badge" [ngClass]="getStatusClass(booking.status)">
+            {{ getStatusDisplay(booking.status) }}
+          </span>
+        </div>
+
+        <div class="booking-details">
+          <div class="detail-row">
+            <div class="detail-item">
+              <label>Flight Number</label>
+              <span>{{ booking.flightNumber }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Route</label>
+              <span>{{ booking.source }} → {{ booking.destination }}</span>
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-item">
+              <label>Travel Date</label>
+              <span>{{ formatDate(booking.travelDate) }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Booking Date</label>
+              <span>{{ formatDateTime(booking.bookingDate) }}</span>
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-item">
+              <label>Passenger Name</label>
+              <span>{{ booking.passengerName }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Seats Booked</label>
+              <span>{{ booking.seatsBooked }}</span>
+            </div>
+          </div>
+
+          <div class="detail-row" *ngIf="booking.seatNumbers && booking.seatNumbers.length > 0">
+            <div class="detail-item full-width">
+              <label>Seat Numbers</label>
+              <div class="seat-numbers">
+                <span *ngFor="let seat of booking.seatNumbers" class="seat-badge">{{ seat }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-row" *ngIf="booking.returnFlightNumber">
+            <div class="detail-item full-width return-flight">
+              <label>Return Flight</label>
+              <span>{{ booking.returnFlightNumber }} on {{ formatDate(booking.returnTravelDate || '') }}</span>
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-item full-width total-amount">
+              <label>Total Amount</label>
+              <span class="amount-value">{{ formatCurrency(booking.totalAmount) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

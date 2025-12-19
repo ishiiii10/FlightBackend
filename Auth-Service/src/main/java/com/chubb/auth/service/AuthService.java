@@ -5,6 +5,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.chubb.auth.dto.LoginRequest;
 import com.chubb.auth.dto.LoginResponse;
 import com.chubb.auth.dto.SignupRequest;
+import com.chubb.auth.dto.UserProfileResponse;
 import com.chubb.auth.entity.User;
 import com.chubb.auth.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -43,5 +44,17 @@ public class AuthService {
 
         String token = jwtService.generateToken(user);
         return new LoginResponse(token, user.getRole().name());
+    }
+
+    public UserProfileResponse getProfile(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        return UserProfileResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .fullName(user.getEmail()) // Using email as name for now, can be extended later
+                .build();
     }
 }

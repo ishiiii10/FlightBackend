@@ -25,8 +25,11 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(ex -> ex
                         // 🔓 Public endpoints (GENERAL PUBLIC)
-                        .pathMatchers("/auth/**").permitAll()
+                        .pathMatchers("/auth/signup", "/auth/login").permitAll()
                         .pathMatchers(HttpMethod.GET, "/flights/**").permitAll()
+
+                        // 👤 Authenticated user endpoints (both CUSTOMER and ADMIN)
+                        .pathMatchers("/auth/profile").authenticated()
 
                         // 👤 Customer endpoints
                         .pathMatchers("/bookings/**").hasRole("CUSTOMER")
