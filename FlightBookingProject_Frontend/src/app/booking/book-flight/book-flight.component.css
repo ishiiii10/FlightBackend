@@ -133,15 +133,6 @@
   color: var(--text-gray);
 }
 
-.readonly-field {
-  background-color: #f3f4f6;
-  cursor: not-allowed;
-}
-
-.form-hint.error {
-  color: #dc2626;
-}
-
 @media (max-width: 768px) {
   .flight-info {
     grid-template-columns: 1fr;

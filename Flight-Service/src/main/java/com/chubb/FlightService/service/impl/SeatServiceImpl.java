@@ -137,5 +137,11 @@ public class SeatServiceImpl implements SeatService {
     public List<Seat> getSeatsByBookingId(String bookingId) {
         return seatRepository.findByBookingId(bookingId);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Seat> getSeatsByFlightNumberAndTravelDate(String flightNumber, LocalDate travelDate) {
+        return seatRepository.findByFlightNumberAndTravelDate(flightNumber, travelDate);
+    }
 }
 

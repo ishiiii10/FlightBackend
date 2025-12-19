@@ -42,6 +42,48 @@ public class BookingServiceImpl implements BookingService {
             String userId,
             String email
     ) {
+        // Validate mandatory fields
+        if (request.getFlightNumber() == null || request.getFlightNumber().isBlank()) {
+            throw new IllegalArgumentException("Flight number is required");
+        }
+        
+        if (request.getTravelDate() == null) {
+            throw new IllegalArgumentException("Travel date is required");
+        }
+        
+        if (request.getTravelDate().isBefore(java.time.LocalDate.now())) {
+            throw new IllegalArgumentException("Travel date cannot be in the past");
+        }
+        
+        if (request.getPassengers() == null || request.getPassengers().isEmpty()) {
+            throw new IllegalArgumentException("At least one passenger is required");
+        }
+        
+        if (request.getSeatsBooked() == null || request.getSeatsBooked() <= 0) {
+            throw new IllegalArgumentException("Number of seats booked must be greater than 0");
+        }
+        
+        if (request.getContactEmail() == null || request.getContactEmail().isBlank()) {
+            throw new IllegalArgumentException("Contact email is required");
+        }
+        
+        // Validate all passengers have required fields
+        for (int i = 0; i < request.getPassengers().size(); i++) {
+            var passenger = request.getPassengers().get(i);
+            if (passenger.getName() == null || passenger.getName().isBlank()) {
+                throw new IllegalArgumentException("Passenger " + (i + 1) + ": Name is required");
+            }
+            if (passenger.getGender() == null) {
+                throw new IllegalArgumentException("Passenger " + (i + 1) + ": Gender is required");
+            }
+            if (passenger.getMealType() == null) {
+                throw new IllegalArgumentException("Passenger " + (i + 1) + ": Meal type is required");
+            }
+            if (passenger.getSeatNumber() == null || passenger.getSeatNumber().isBlank()) {
+                throw new IllegalArgumentException("Passenger " + (i + 1) + ": Seat number is required");
+            }
+        }
+        
         // Validate round trip requirements
         if (request.getTripType() == Trip_Type.ROUND_TRIP) {
             if (request.getReturnFlightNumber() == null || request.getReturnFlightNumber().isBlank()) {
@@ -50,11 +92,31 @@ public class BookingServiceImpl implements BookingService {
             if (request.getReturnTravelDate() == null) {
                 throw new IllegalArgumentException("Return travel date is required for round trip");
             }
+            if (request.getReturnTravelDate().isBefore(request.getTravelDate())) {
+                throw new IllegalArgumentException("Return travel date cannot be before outbound travel date");
+            }
             if (request.getReturnPassengers() == null || request.getReturnPassengers().isEmpty()) {
                 throw new IllegalArgumentException("Return passengers are required for round trip");
             }
             if (request.getReturnPassengers().size() != request.getPassengers().size()) {
                 throw new IllegalArgumentException("Number of return passengers must match outbound passengers");
+            }
+            
+            // Validate all return passengers have required fields
+            for (int i = 0; i < request.getReturnPassengers().size(); i++) {
+                var passenger = request.getReturnPassengers().get(i);
+                if (passenger.getName() == null || passenger.getName().isBlank()) {
+                    throw new IllegalArgumentException("Return passenger " + (i + 1) + ": Name is required");
+                }
+                if (passenger.getGender() == null) {
+                    throw new IllegalArgumentException("Return passenger " + (i + 1) + ": Gender is required");
+                }
+                if (passenger.getMealType() == null) {
+                    throw new IllegalArgumentException("Return passenger " + (i + 1) + ": Meal type is required");
+                }
+                if (passenger.getSeatNumber() == null || passenger.getSeatNumber().isBlank()) {
+                    throw new IllegalArgumentException("Return passenger " + (i + 1) + ": Seat number is required");
+                }
             }
         }
 
@@ -66,7 +128,13 @@ public class BookingServiceImpl implements BookingService {
         // Extract seat numbers from passengers
         List<String> outboundSeatNumbers = request.getPassengers().stream()
                 .map(p -> p.getSeatNumber())
+                .filter(seat -> seat != null && !seat.isBlank())
                 .collect(Collectors.toList());
+
+        // Validate all passengers have seat numbers
+        if (outboundSeatNumbers.size() != request.getPassengers().size()) {
+            throw new IllegalArgumentException("All passengers must have a seat number assigned");
+        }
 
         // Check for duplicate seat selections
         if (outboundSeatNumbers.size() != outboundSeatNumbers.stream().distinct().count()) {
@@ -87,6 +155,30 @@ public class BookingServiceImpl implements BookingService {
             // Continue - seats might already be initialized
         }
 
+        // Validate that selected seats are actually available
+        try {
+            List<String> availableSeats = flightClient.getAvailableSeats(
+                request.getFlightNumber(), 
+                request.getTravelDate().toString()
+            );
+            
+            for (String seatNumber : outboundSeatNumbers) {
+                if (!availableSeats.contains(seatNumber)) {
+                    throw new IllegalArgumentException(
+                        "Seat " + seatNumber + " is not available for flight " + request.getFlightNumber() + 
+                        " on " + request.getTravelDate() + ". Available seats: " + 
+                        (availableSeats.isEmpty() ? "None" : String.join(", ", availableSeats))
+                    );
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            // Re-throw validation errors
+            throw e;
+        } catch (Exception e) {
+            // For other errors, log but continue - the actual booking will validate again
+            System.err.println("Warning: Could not validate seat availability: " + e.getMessage());
+        }
+
         // Book outbound seats atomically
         try {
             com.chubb.BookingService.dto.BookSeatsRequest bookRequest = new com.chubb.BookingService.dto.BookSeatsRequest();
@@ -103,7 +195,17 @@ public class BookingServiceImpl implements BookingService {
         if (request.getTripType() == Trip_Type.ROUND_TRIP) {
             returnSeatNumbers = request.getReturnPassengers().stream()
                     .map(p -> p.getSeatNumber())
+                    .filter(seat -> seat != null && !seat.isBlank())
                     .collect(Collectors.toList());
+
+            // Validate all return passengers have seat numbers
+            if (returnSeatNumbers.size() != request.getReturnPassengers().size()) {
+                // Rollback outbound seats
+                try {
+                    flightClient.releaseSeatsByBookingId(pnr);
+                } catch (Exception ignored) {}
+                throw new IllegalArgumentException("All return passengers must have a seat number assigned");
+            }
 
             // Check for duplicate return seat selections
             if (returnSeatNumbers.size() != returnSeatNumbers.stream().distinct().count()) {
@@ -120,6 +222,37 @@ public class BookingServiceImpl implements BookingService {
                 flightClient.initializeSeats(request.getReturnFlightNumber(), request.getReturnTravelDate().toString(), returnFlightDetails.getTotalSeats());
             } catch (Exception e) {
                 // Seats may already be initialized
+            }
+
+            // Validate that selected return seats are actually available
+            try {
+                List<String> returnAvailableSeats = flightClient.getAvailableSeats(
+                    request.getReturnFlightNumber(), 
+                    request.getReturnTravelDate().toString()
+                );
+                
+                for (String seatNumber : returnSeatNumbers) {
+                    if (!returnAvailableSeats.contains(seatNumber)) {
+                        // Rollback outbound seats
+                        try {
+                            flightClient.releaseSeatsByBookingId(pnr);
+                        } catch (Exception ignored) {}
+                        throw new IllegalArgumentException(
+                            "Return seat " + seatNumber + " is not available for flight " + request.getReturnFlightNumber() + 
+                            " on " + request.getReturnTravelDate() + ". Available seats: " + 
+                            (returnAvailableSeats.isEmpty() ? "None" : String.join(", ", returnAvailableSeats))
+                        );
+                    }
+                }
+            } catch (IllegalArgumentException e) {
+                // Rollback outbound seats
+                try {
+                    flightClient.releaseSeatsByBookingId(pnr);
+                } catch (Exception ignored) {}
+                throw e;
+            } catch (Exception e) {
+                // For other errors, log but continue - the actual booking will validate again
+                System.err.println("Warning: Could not validate return seat availability: " + e.getMessage());
             }
 
             // Book return seats

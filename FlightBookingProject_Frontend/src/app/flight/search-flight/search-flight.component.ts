@@ -102,12 +102,9 @@ export class SearchFlightComponent {
       this.router.navigate(['/login']);
       return;
     }
-    // Pass travel date from search to booking component
-    const travelDate = this.searchData.date;
-    if (travelDate) {
-      this.router.navigate(['/book', flight.id], { queryParams: { travelDate: travelDate } });
-    } else {
-      this.router.navigate(['/book', flight.id]);
-    }
+    // Pass travel date as query parameter
+    this.router.navigate(['/book', flight.id], {
+      queryParams: { travelDate: this.searchData.date }
+    });
   }
 }

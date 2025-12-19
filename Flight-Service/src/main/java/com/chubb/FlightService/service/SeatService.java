@@ -36,5 +36,10 @@ public interface SeatService {
      * Get seats by booking ID (for cancellation)
      */
     List<com.chubb.FlightService.entity.Seat> getSeatsByBookingId(String bookingId);
+    
+    /**
+     * Get all seats for a flight on a given date (for checking if initialized)
+     */
+    List<com.chubb.FlightService.entity.Seat> getSeatsByFlightNumberAndTravelDate(String flightNumber, LocalDate travelDate);
 }
 

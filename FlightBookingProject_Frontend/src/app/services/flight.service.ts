@@ -14,19 +14,6 @@ export interface Flight {
   arrivalTime: string;
   price: number;
   availableSeats: number;
-  totalSeats?: number;
-}
-
-export interface InternalFlightDetails {
-  flightNumber: string;
-  airline: string;
-  source: string;
-  destination: string;
-  departureTime: string;
-  arrivalTime: string;
-  totalSeats: number;
-  availableSeats: number;
-  price: number;
 }
 
 @Injectable({
@@ -62,19 +49,6 @@ export class FlightService {
     return this.http.get<string[]>(`${API_URL}/flights/internal/${flightNumber}/seats/available`, {
       headers,
       params: { travelDate }
-    });
-  }
-
-  getInternalFlightDetails(flightNumber: string): Observable<InternalFlightDetails> {
-    const headers = this.getHeaders();
-    return this.http.get<InternalFlightDetails>(`${API_URL}/flights/internal/${flightNumber}`, { headers });
-  }
-
-  initializeSeats(flightNumber: string, travelDate: string, totalSeats: number): Observable<void> {
-    const headers = this.getHeaders();
-    return this.http.post<void>(`${API_URL}/flights/internal/${flightNumber}/seats/initialize`, null, {
-      headers,
-      params: { travelDate, totalSeats: totalSeats.toString() }
     });
   }
 }

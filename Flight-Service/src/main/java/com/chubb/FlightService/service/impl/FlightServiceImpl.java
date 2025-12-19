@@ -195,6 +195,24 @@ public class FlightServiceImpl implements FlightService {
     @Override
     public List<String> getAvailableSeats(String flightNumber, String travelDate) {
         LocalDate date = LocalDate.parse(travelDate);
+        
+        // Check if seats are initialized, if not initialize them
+        List<com.chubb.FlightService.entity.Seat> existingSeats = 
+            seatService.getSeatsByFlightNumberAndTravelDate(flightNumber, date);
+        
+        if (existingSeats.isEmpty()) {
+            // Seats not initialized, get flight details and initialize
+            Flight flight = flightRepository.findByFlightNumber(flightNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Flight not found: " + flightNumber));
+            try {
+                seatService.initializeSeatsForFlight(flightNumber, date, flight.getTotalSeats());
+            } catch (Exception e) {
+                // If initialization fails (e.g., seats already exist from concurrent request), 
+                // continue and try to fetch available seats
+                // This handles race conditions gracefully
+            }
+        }
+        
         return seatService.getAvailableSeats(flightNumber, date);
     }
 

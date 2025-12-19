@@ -24,29 +24,6 @@ export class LoginComponent {
 
   onLogin() {
     this.errorMessage = '';
-
-    // Validation
-    if (!this.loginData.email || this.loginData.email.trim() === '') {
-      this.errorMessage = 'Email is required';
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(this.loginData.email)) {
-      this.errorMessage = 'Invalid email format';
-      return;
-    }
-
-    if (!this.loginData.password || this.loginData.password.trim() === '') {
-      this.errorMessage = 'Password is required';
-      return;
-    }
-
-    if (this.loginData.password.length < 6) {
-      this.errorMessage = 'Password must be at least 6 characters';
-      return;
-    }
-
     this.authService.login(this.loginData.email, this.loginData.password).subscribe({
       next: (response) => {
         localStorage.setItem('token', response.token);
