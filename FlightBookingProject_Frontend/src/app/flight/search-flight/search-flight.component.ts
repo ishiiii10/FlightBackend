@@ -18,21 +18,25 @@ interface Flight {
 
 @Component({
   selector: 'app-search-flight',
+  standalone: true,
   imports: [FormsModule, CommonModule],
   templateUrl: './search-flight.component.html',
   styleUrl: './search-flight.component.css'
 })
 export class SearchFlightComponent {
+
   searchData = {
     source: '',
     destination: '',
     date: ''
   };
+
   flights: Flight[] = [];
   loading = false;
   hasSearched = false;
   errorMessage = '';
-  today = new Date().toISOString().split('T')[0]; // Current date in YYYY-MM-DD format
+
+  today = new Date().toISOString().split('T')[0];
 
   constructor(
     private flightService: FlightService,
@@ -40,6 +44,7 @@ export class SearchFlightComponent {
   ) {}
 
   onSearch() {
+    // Validation
     if (!this.searchData.source || !this.searchData.destination) {
       this.errorMessage = 'Please enter both source and destination';
       return;
@@ -50,7 +55,6 @@ export class SearchFlightComponent {
       return;
     }
 
-    // Validate date is not in the past
     const selectedDate = new Date(this.searchData.date);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -61,22 +65,24 @@ export class SearchFlightComponent {
       return;
     }
 
-    // Convert to uppercase to match enum values
     const source = this.searchData.source.toUpperCase().trim();
     const destination = this.searchData.destination.toUpperCase().trim();
+    const date = this.searchData.date;
 
     this.loading = true;
     this.hasSearched = true;
     this.errorMessage = '';
     this.flights = [];
 
-    this.flightService.searchFlights(source, destination).subscribe({
+    // ✅ DATE IS NOW PASSED CORRECTLY
+    this.flightService.searchFlights(source, destination, date).subscribe({
       next: (flights) => {
         this.flights = flights;
         this.loading = false;
       },
       error: (error) => {
-        this.errorMessage = error.error?.message || 'Failed to search flights. Please try again.';
+        this.errorMessage =
+          error.error?.message || 'Failed to search flights. Please try again.';
         this.loading = false;
       }
     });
@@ -96,13 +102,14 @@ export class SearchFlightComponent {
     // Flight card click handler
   }
 
+
   bookFlight(flight: Flight) {
     const token = localStorage.getItem('token');
     if (!token) {
       this.router.navigate(['/login']);
       return;
     }
-    // Pass travel date as query parameter
+
     this.router.navigate(['/book', flight.id], {
       queryParams: { travelDate: this.searchData.date }
     });

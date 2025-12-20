@@ -16,7 +16,7 @@ public interface FlightService {
 
     FlightSummaryResponse getFlightById(Long id);
 
-    List<FlightSummaryResponse> searchFlights(City source, City destination);
+    List<FlightSummaryResponse> searchFlights(City source, City destination, String date);
 
     InternalFlightResponse getInternalFlightDetails(String flightNumber);
 

@@ -81,17 +81,24 @@ public class FlightServiceImpl implements FlightService {
     }
 
     @Override
-    public List<FlightSummaryResponse> searchFlights(City source, City destination) {
+public List<FlightSummaryResponse> searchFlights(
+        City source,
+        City destination,
+        String date
+) {
 
-        if (source == destination) {
-            throw new IllegalArgumentException("Source and destination cannot be the same");
-        }
-
-        return flightRepository.findBySourceAndDestination(source, destination)
-                .stream()
-                .map(this::mapToSummary)
-                .toList();
+    if (source == destination) {
+        throw new IllegalArgumentException("Source and destination cannot be the same");
     }
+
+    LocalDate travelDate = LocalDate.parse(date);
+
+    return flightRepository
+            .findFlightsByRouteAndDate(source, destination, travelDate)
+            .stream()
+            .map(this::mapToSummary)
+            .toList();
+}
 
     @Override
     public InternalFlightResponse getInternalFlightDetails(String flightNumber) {

@@ -38,9 +38,9 @@ export class FlightService {
     return this.http.get<Flight>(`${API_URL}/flights/${id}`);
   }
 
-  searchFlights(source: string, destination: string): Observable<Flight[]> {
+  searchFlights(source: string, destination: string, date: string): Observable<Flight[]> {
     return this.http.get<Flight[]>(`${API_URL}/flights/search`, {
-      params: { source, destination }
+      params: { source, destination, date }
     });
   }
 

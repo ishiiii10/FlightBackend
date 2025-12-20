@@ -81,14 +81,13 @@ public class FlightController {
 
     // 🌍 PUBLIC
     @GetMapping("/search")
-    public ResponseEntity<List<FlightSummaryResponse>> searchFlights(
-            @RequestParam City source,
-            @RequestParam City destination) {
-
-        return ResponseEntity.ok(
-                flightService.searchFlights(source, destination)
-        );
-    }
+public List<FlightSummaryResponse> searchFlights(
+        @RequestParam City source,
+        @RequestParam City destination,
+        @RequestParam String date
+) {
+    return flightService.searchFlights(source, destination, date);
+}
 
     // 🔒 INTERNAL (only Booking Service via Gateway)
     @GetMapping("/internal/{flightNumber}")
