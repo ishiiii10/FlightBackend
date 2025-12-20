@@ -272,9 +272,12 @@
             </div>
           </div>
 
-          <button type="submit" class="btn-primary" [disabled]="loading">
-            {{ loading ? 'Booking...' : 'Confirm Booking' }}
-          </button>
+          
+<button type="button" class="btn btn-primary" (click)="onBookFlight()" [disabled]="bookingDisabled">
+  <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+  {{ bookingButtonLabel }}
+</button>
+<!-- ...existing code... -->
 
           <div *ngIf="errorMessage" class="error-message">
             {{ errorMessage }}

@@ -34,6 +34,7 @@ export class BookFlightComponent implements OnInit {
   flightId: string = '';
   flight: Flight | null = null;
   loading = false;
+  isBooked: boolean =false;
   loadingFlight = false;
   errorMessage = '';
   successMessage = '';
@@ -51,6 +52,7 @@ export class BookFlightComponent implements OnInit {
     returnTravelDate: '',
     returnPassengers: [] as Passenger[]
   };
+  
 
   constructor(
     private route: ActivatedRoute,
@@ -73,6 +75,7 @@ export class BookFlightComponent implements OnInit {
     if (userEmail) {
       this.bookingData.contactEmail = userEmail;
     }
+    this.updatePassengers();
   }
 
   loadFlight() {
@@ -182,6 +185,17 @@ export class BookFlightComponent implements OnInit {
     });
   }
 
+  get bookingButtonLabel(): string {
+    if (this.loading) return 'Booking…';
+    if (this.isBooked) return 'Booked';
+    return 'Confirm Booking';
+  }
+
+  // Disable while booking or after booked
+  get bookingDisabled(): boolean {
+    return this.loading || this.isBooked;
+  }
+
   onBookFlight() {
     if (!this.flight) return;
 
@@ -255,6 +269,7 @@ export class BookFlightComponent implements OnInit {
     }
 
     this.loading = true;
+    this.isBooked=false;
     this.errorMessage = '';
     this.successMessage = '';
 
@@ -272,6 +287,8 @@ export class BookFlightComponent implements OnInit {
 
     this.bookingService.createBooking(bookingRequest).subscribe({
       next: (response) => {
+        this.isBooked=true;
+        this.loading=false;
         this.successMessage = `Booking confirmed! PNR: ${response.pnr}`;
         /*setTimeout(() => {
           this.router.navigate(['/search']);
