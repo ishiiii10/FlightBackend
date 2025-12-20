@@ -273,9 +273,9 @@ export class BookFlightComponent implements OnInit {
     this.bookingService.createBooking(bookingRequest).subscribe({
       next: (response) => {
         this.successMessage = `Booking confirmed! PNR: ${response.pnr}`;
-        setTimeout(() => {
+        /*setTimeout(() => {
           this.router.navigate(['/search']);
-        }, 3000);
+        }, 3000); */
       },
       error: (error) => {
         this.errorMessage = error.error?.message || 'Booking failed. Please try again.';
