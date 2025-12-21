@@ -15,6 +15,18 @@ export interface Flight {
   price: number;
   availableSeats: number;
 }
+export interface CreateFlightRequest {
+  flightNumber: string;
+  airline: string;
+  source: string;
+  destination: string;
+  departureTime: string;
+  arrivalTime: string;
+  totalSeats: number;
+  availableSeats: number;
+  price: number;
+}
+
 
 @Injectable({
   providedIn: 'root'
@@ -29,6 +41,21 @@ export class FlightService {
       'Content-Type': 'application/json'
     });
   }
+
+  private getAdminHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token');
+    return new HttpHeaders({
+      'Authorization': token ? `Bearer ${token}` : '',
+      'X-User-Role': 'ADMIN',
+      'Content-Type': 'application/json'
+    });
+  }
+
+  createFlight(request: CreateFlightRequest): Observable<any> {
+    const headers = this.getAdminHeaders();
+    return this.http.post(`${API_URL}/flights`, request, { headers });
+  }
+
 
   getAllFlights(): Observable<Flight[]> {
     return this.http.get<Flight[]>(`${API_URL}/flights`);
