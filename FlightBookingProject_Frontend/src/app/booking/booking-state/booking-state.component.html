@@ -14,7 +14,29 @@
   <p><strong>Total Amount:</strong> {{ booking.totalAmount | currency }}</p>
 
   <div class="mt-3">
-    <button class="btn btn-primary me-2" (click)="goToHistory()">My Bookings</button>
-    <button class="btn btn-secondary" (click)="goToSearch()">Search Flights</button>
+    <button
+      class="btn btn-danger me-2"
+      *ngIf="booking.status === 'CONFIRMED'"
+      [disabled]="cancelling"
+      (click)="cancelBooking()">
+      {{ cancelling ? 'Cancelling...' : 'Cancel Booking' }}
+    </button>
+
+    <button class="btn btn-secondary me-2" (click)="goToHistory()">
+      View Booking History
+    </button>
+
+    <button class="btn btn-primary" (click)="goToSearch()">
+      Book Another Flight
+    </button>
+  </div>
+
+  <div *ngIf="successMessage" class="alert alert-success mt-3">
+    {{ successMessage }}
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger mt-3">
+    {{ error }}
   </div>
 </div>
+
