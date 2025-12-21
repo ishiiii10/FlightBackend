@@ -6,7 +6,9 @@ import { BookFlightComponent } from './booking/book-flight/book-flight.component
 import { ProfileComponent } from './profile/profile.component';
 import { ViewHistoryComponent } from './booking/view-history/view-history.component';
 import { authGuard } from './guards/auth.guard';
+import { adminGuard } from './guards/admin.guard';
 import { BookingStateComponent } from './booking/booking-state/booking-state.component';
+import { AddFlightComponent } from './flight/add-flight/add-flight.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/search', pathMatch: 'full' },
@@ -17,6 +19,7 @@ export const routes: Routes = [
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'booking-history', component: ViewHistoryComponent, canActivate: [authGuard] },
   { path: 'booking/:pnr', component: BookingStateComponent, canActivate: [authGuard] },
+  {path: 'admin/add-flight', component: AddFlightComponent, canActivate: [adminGuard]},
   { path: '**', redirectTo: '/search' }
   
 ];
