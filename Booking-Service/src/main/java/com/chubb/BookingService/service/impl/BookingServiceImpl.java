@@ -340,24 +340,68 @@ public class BookingServiceImpl implements BookingService {
                 .build();
     }
 
-    @Override
-    public BookingSummaryResponse getBookingByPnr(String pnr, String userId) {
-        Booking booking = bookingRepository.findByPnr(pnr)
-                .orElseThrow(() -> new BookingNotFoundException(pnr));
+    
+        @Override
+public BookingSummaryResponse getBookingByPnr(String pnr, String userId) {
+    Booking booking = bookingRepository.findByPnr(pnr)
+            .orElseThrow(() -> new BookingNotFoundException(pnr));
 
-        if (!booking.getUserId().equals(userId)) {
-            throw new RuntimeException("Access denied to this booking");
-        }
-
-        return BookingSummaryResponse.builder()
-                .pnr(booking.getPnr())
-                .status(booking.getStatus())
-                .flightNumber(booking.getFlightNumber())
-                .travelDate(booking.getTravelDate())
-                .passengerName(booking.getPassengerName())
-                .seatsBooked(booking.getSeatsBooked())
-                .build();
+    if (!booking.getUserId().equals(userId)) {
+        throw new RuntimeException("Access denied to this booking");
     }
+
+    // Fetch flight details
+    FlightDetailsResponse flightDetails = flightClient.getFlightDetails(
+            booking.getFlightNumber()
+    );
+
+    // Extract seat numbers
+    List<String> seatNumbers = booking.getPassengers() != null
+            ? booking.getPassengers()
+                    .stream()
+                    .map(Passenger::getSeatNumber)
+                    .collect(Collectors.toList())
+            : new ArrayList<>();
+
+    // Calculate total amount (outbound)
+    BigDecimal totalAmount = flightDetails.getPrice()
+            .multiply(BigDecimal.valueOf(booking.getSeatsBooked()));
+
+    // Add return flight fare if round trip
+    if (booking.getReturnFlightNumber() != null &&
+        booking.getReturnTravelDate() != null) {
+
+        try {
+            FlightDetailsResponse returnFlight =
+                    flightClient.getFlightDetails(booking.getReturnFlightNumber());
+
+            totalAmount = totalAmount.add(
+                    returnFlight.getPrice()
+                            .multiply(BigDecimal.valueOf(booking.getSeatsBooked()))
+            );
+        } catch (Exception e) {
+            log.warn("Could not fetch return flight price: {}", e.getMessage());
+        }
+    }
+
+    return BookingSummaryResponse.builder()
+            .pnr(booking.getPnr())
+            .status(booking.getStatus())
+            .flightNumber(booking.getFlightNumber())
+            .source(flightDetails.getSource())
+            .destination(flightDetails.getDestination())
+            .travelDate(booking.getTravelDate())
+            .bookingDate(booking.getCreatedAt())
+            .passengerName(booking.getPassengerName())
+            .seatsBooked(booking.getSeatsBooked())
+            .seatNumbers(seatNumbers)
+            .totalAmount(totalAmount)
+            .returnFlightNumber(booking.getReturnFlightNumber())
+            .returnTravelDate(booking.getReturnTravelDate())
+            .build();
+}
+
+        
     
     @Override
     public List<BookingSummaryResponse> getMyBookings(String userId) {
