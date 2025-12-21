@@ -290,9 +290,10 @@ export class BookFlightComponent implements OnInit {
         this.isBooked=true;
         this.loading=false;
         this.successMessage = `Booking confirmed! PNR: ${response.pnr}`;
-        /*setTimeout(() => {
-          this.router.navigate(['/search']);
-        }, 3000); */
+        
+          this.router.navigate(['/booking', response.pnr]);
+        
+        
       },
       error: (error) => {
         this.errorMessage = error.error?.message || 'Booking failed. Please try again.';

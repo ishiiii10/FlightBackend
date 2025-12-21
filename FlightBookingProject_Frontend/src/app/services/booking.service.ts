@@ -84,4 +84,8 @@ export class BookingService {
     const headers = this.getHeaders();
     return this.http.delete<CancelBookingResponse>(`${API_URL}/bookings/cancel/${pnr}`, { headers });
   }
+  getBookingByPnr(pnr: string): Observable<BookingHistory> {
+    const headers = this.getHeaders();
+    return this.http.get<BookingHistory>(`${API_URL}/bookings/${pnr}`, { headers });
+  }
 }

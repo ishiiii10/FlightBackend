@@ -1,1 +1,20 @@
-<p>booking-state works!</p>
+<div *ngIf="loading" class="p-3">Loading booking...</div>
+<div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+<div *ngIf="booking" class="p-3">
+  <h4>Booking Summary</h4>
+  <p><strong>PNR:</strong> {{ booking.pnr }}</p>
+  <p><strong>Status:</strong> {{ booking.status }}</p>
+  <p><strong>Flight:</strong> {{ booking.flightNumber }}</p>
+  <p><strong>Route:</strong> {{ booking.source }} → {{ booking.destination }}</p>
+  <p><strong>Travel Date:</strong> {{ booking.travelDate }}</p>
+  <p><strong>Booking Date:</strong> {{ booking.bookingDate }}</p>
+  <p><strong>Seats:</strong> {{ booking.seatsBooked }} — <span *ngFor="let s of booking.seatNumbers; let i = index">{{ s }}<span *ngIf="i+1 < booking.seatNumbers.length">, </span></span></p>
+  <p><strong>Passenger:</strong> {{ booking.passengerName }}</p>
+  <p><strong>Total Amount:</strong> {{ booking.totalAmount | currency }}</p>
+
+  <div class="mt-3">
+    <button class="btn btn-primary me-2" (click)="goToHistory()">My Bookings</button>
+    <button class="btn btn-secondary" (click)="goToSearch()">Search Flights</button>
+  </div>
+</div>
