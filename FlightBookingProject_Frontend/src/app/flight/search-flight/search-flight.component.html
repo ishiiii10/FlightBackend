@@ -8,30 +8,40 @@
         <form (ngSubmit)="onSearch()" class="search-form">
           <div class="form-group">
             <label class="form-label" for="source">From</label>
-            <input 
-              type="text" 
-              id="source" 
-              class="form-input" 
-              [(ngModel)]="searchData.source"
-              name="source"
-              placeholder="City or airport (e.g., DELHI, MUMBAI)"
-              required
-            />
-            <small class="form-hint">Available: DELHI, MUMBAI, BANGALORE, CHENNAI, KOLKATA, HYDERABAD, PUNE, JAIPUR</small>
+            <select
+  id="source"
+  class="form-input"
+  [(ngModel)]="searchData.source"
+  name="source"
+  required
+>
+  <option value="">Select Source</option>
+  <option *ngFor="let city of cities" [value]="city">
+    {{ city }}
+  </option>
+</select>
+            
           </div>
 
           <div class="form-group">
             <label class="form-label" for="destination">To</label>
-            <input 
-              type="text" 
-              id="destination" 
-              class="form-input" 
-              [(ngModel)]="searchData.destination"
-              name="destination"
-              placeholder="City or airport (e.g., MUMBAI, DELHI)"
-              required
-            />
-            <small class="form-hint">Available: DELHI, MUMBAI, BANGALORE, CHENNAI, KOLKATA, HYDERABAD, PUNE, JAIPUR</small>
+            <select
+  id="destination"
+  class="form-input"
+  [(ngModel)]="searchData.destination"
+  name="destination"
+  required
+>
+  <option value="">Select Destination</option>
+  <option
+    *ngFor="let city of cities"
+    [value]="city"
+    [disabled]="city === searchData.source"
+  >
+    {{ city }}
+  </option>
+</select>
+            
           </div>
 
           <div class="form-group">

@@ -1,138 +1,229 @@
 <div class="booking-history-container">
+
+  <!-- Header -->
   <div class="history-header">
     <h2>Booking History</h2>
     <a routerLink="/profile" class="back-link">← Back to Profile</a>
   </div>
 
+  <!-- Status Filter -->
+  <div class="filter-bar">
+    <button
+      class="filter-btn"
+      [class.active]="selectedStatus === 'ALL'"
+      (click)="onFilterChange('ALL')">
+      All
+    </button>
+
+    <button
+      class="filter-btn confirmed"
+      [class.active]="selectedStatus === 'CONFIRMED'"
+      (click)="onFilterChange('CONFIRMED')">
+      Confirmed
+    </button>
+
+    <button
+      class="filter-btn cancelled"
+      [class.active]="selectedStatus === 'CANCELLED'"
+      (click)="onFilterChange('CANCELLED')">
+      Cancelled
+    </button>
+  </div>
+
+  <!-- Loading -->
   <div *ngIf="loading" class="loading">
     <p>Loading booking history...</p>
   </div>
 
+  <!-- Error -->
   <div *ngIf="errorMessage" class="error-message">
     <p>{{ errorMessage }}</p>
   </div>
 
+  <!-- Success -->
   <div *ngIf="successMessage" class="success-message">
     <p>{{ successMessage }}</p>
   </div>
 
-  <div *ngIf="!loading && !errorMessage">
-    <div *ngIf="bookings.length === 0" class="no-bookings">
-      <p>You don't have any bookings yet.</p>
-      <a routerLink="/search" class="btn btn-primary">Search Flights</a>
-    </div>
+  <!-- No Bookings -->
+  <div *ngIf="!loading && filteredBookings.length === 0" class="no-bookings">
+    <p>No bookings found.</p>
+    <a routerLink="/search" class="btn btn-primary">Search Flights</a>
+  </div>
 
-    <div *ngIf="bookings.length > 0" class="bookings-list">
-      <div *ngFor="let booking of bookings" class="booking-card">
-        <div class="booking-header">
-          <div class="booking-pnr">
-            <span class="pnr-label">PNR:</span>
-            <span class="pnr-value">{{ booking.pnr }}</span>
+  <!-- Booking Cards Grid -->
+  <div *ngIf="!loading && filteredBookings.length > 0" class="bookings-list">
+    <div *ngFor="let booking of filteredBookings" class="booking-card">
+
+      <!-- Card Header -->
+      <div class="booking-header">
+        <div class="booking-pnr">
+          <span class="pnr-label">PNR</span>
+          <span class="pnr-value">{{ booking.pnr }}</span>
+        </div>
+        <span
+          class="status-badge"
+          [ngClass]="getStatusClass(booking.status)">
+          {{ getStatusDisplay(booking.status) }}
+        </span>
+      </div>
+
+      <!-- Card Body -->
+      <div class="booking-details">
+
+        <div class="detail-row">
+          <div class="detail-item">
+            <label>Flight</label>
+            <span>{{ booking.flightNumber }}</span>
           </div>
-          <span class="status-badge" [ngClass]="getStatusClass(booking.status)">
-            {{ getStatusDisplay(booking.status) }}
-          </span>
+          <div class="detail-item">
+            <label>Route</label>
+            <span>{{ booking.source }} → {{ booking.destination }}</span>
+          </div>
         </div>
 
-        <div class="booking-details">
-          <div class="detail-row">
-            <div class="detail-item">
-              <label>Flight Number</label>
-              <span>{{ booking.flightNumber }}</span>
-            </div>
-            <div class="detail-item">
-              <label>Route</label>
-              <span>{{ booking.source }} → {{ booking.destination }}</span>
-            </div>
+        <div class="detail-row">
+          <div class="detail-item">
+            <label>Travel Date</label>
+            <span>{{ formatDate(booking.travelDate) }}</span>
           </div>
-
-          <div class="detail-row">
-            <div class="detail-item">
-              <label>Travel Date</label>
-              <span>{{ formatDate(booking.travelDate) }}</span>
-            </div>
-            <div class="detail-item">
-              <label>Booking Date</label>
-              <span>{{ formatDateTime(booking.bookingDate) }}</span>
-            </div>
+          <div class="detail-item">
+            <label>Booking Date</label>
+            <span>{{ formatDateTime(booking.bookingDate) }}</span>
           </div>
+        </div>
 
-          <div class="detail-row">
-            <div class="detail-item">
-              <label>Passenger Name</label>
-              <span>{{ booking.passengerName }}</span>
-            </div>
-            <div class="detail-item">
-              <label>Seats Booked</label>
-              <span>{{ booking.seatsBooked }}</span>
-            </div>
+        <div class="detail-row">
+          <div class="detail-item">
+            <label>Passenger</label>
+            <span>{{ booking.passengerName }}</span>
           </div>
-
-          <div class="detail-row" *ngIf="booking.seatNumbers && booking.seatNumbers.length > 0">
-            <div class="detail-item full-width">
-              <label>Seat Numbers</label>
-              <div class="seat-numbers">
-                <span *ngFor="let seat of booking.seatNumbers" class="seat-badge">{{ seat }}</span>
-              </div>
-            </div>
+          <div class="detail-item">
+            <label>Seats</label>
+            <span>{{ booking.seatsBooked }}</span>
           </div>
+        </div>
 
-          <div class="detail-row" *ngIf="booking.returnFlightNumber">
-            <div class="detail-item full-width return-flight">
-              <label>Return Flight</label>
-              <span>{{ booking.returnFlightNumber }} on {{ formatDate(booking.returnTravelDate || '') }}</span>
-            </div>
-          </div>
-
-          <div class="detail-row">
-            <div class="detail-item full-width total-amount">
-              <label>Total Amount</label>
-              <span class="amount-value">{{ formatCurrency(booking.totalAmount) }}</span>
-            </div>
-          </div>
-
-          <div class="detail-row" *ngIf="canCancelBooking(booking)">
-            <div class="detail-item full-width">
-              <button 
-                class="btn-cancel" 
-                (click)="openCancelModal(booking)"
-                [disabled]="cancelingPnr === booking.pnr">
-                <span *ngIf="cancelingPnr !== booking.pnr">Cancel Booking</span>
-                <span *ngIf="cancelingPnr === booking.pnr">Cancelling...</span>
-              </button>
+        <div
+          class="detail-row"
+          *ngIf="booking.seatNumbers?.length">
+          <div class="detail-item full-width">
+            <label>Seat Numbers</label>
+            <div class="seat-numbers">
+              <span
+                *ngFor="let seat of booking.seatNumbers"
+                class="seat-badge">
+                {{ seat }}
+              </span>
             </div>
           </div>
         </div>
+
+        <div
+          class="detail-row"
+          *ngIf="booking.returnFlightNumber">
+          <div class="detail-item full-width return-flight">
+            <label>Return Flight</label>
+            <span>
+              {{ booking.returnFlightNumber }}
+              on {{ formatDate(booking.returnTravelDate || '') }}
+            </span>
+          </div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-item full-width total-amount">
+            <label>Total Amount</label>
+            <span class="amount-value">
+              {{ formatCurrency(booking.totalAmount) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Cancel Button -->
+        <div
+          class="detail-row"
+          *ngIf="canCancelBooking(booking)">
+          <div class="detail-item full-width">
+            <button
+              class="btn-cancel"
+              (click)="openCancelModal(booking)"
+              [disabled]="cancelingPnr === booking.pnr">
+              <span *ngIf="cancelingPnr !== booking.pnr">
+                Cancel Booking
+              </span>
+              <span *ngIf="cancelingPnr === booking.pnr">
+                Cancelling...
+              </span>
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
 
   <!-- Cancel Confirmation Modal -->
-  <div *ngIf="showCancelModal" class="modal-overlay" (click)="closeCancelModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
+  <div
+    *ngIf="showCancelModal"
+    class="modal-overlay"
+    (click)="closeCancelModal()">
+
+    <div
+      class="modal-content"
+      (click)="$event.stopPropagation()">
+
       <div class="modal-header">
         <h3>Confirm Cancellation</h3>
-        <button class="modal-close" (click)="closeCancelModal()">&times;</button>
+        <button class="modal-close" (click)="closeCancelModal()">
+          &times;
+        </button>
       </div>
+
       <div class="modal-body">
         <p>Are you sure you want to cancel this booking?</p>
+
         <div *ngIf="bookingToCancel" class="booking-summary">
           <p><strong>PNR:</strong> {{ bookingToCancel.pnr }}</p>
           <p><strong>Flight:</strong> {{ bookingToCancel.flightNumber }}</p>
-          <p><strong>Route:</strong> {{ bookingToCancel.source }} → {{ bookingToCancel.destination }}</p>
-          <p><strong>Travel Date:</strong> {{ formatDate(bookingToCancel.travelDate) }}</p>
-          <p><strong>Total Amount:</strong> {{ formatCurrency(bookingToCancel.totalAmount) }}</p>
+          <p><strong>Route:</strong>
+            {{ bookingToCancel.source }} →
+            {{ bookingToCancel.destination }}
+          </p>
+          <p><strong>Travel Date:</strong>
+            {{ formatDate(bookingToCancel.travelDate) }}
+          </p>
+          <p><strong>Total Amount:</strong>
+            {{ formatCurrency(bookingToCancel.totalAmount) }}
+          </p>
         </div>
-        <p class="warning-text">⚠️ Cancellation must be done at least 24 hours before departure.</p>
-        
+
+        <p class="warning-text">
+          Cancellation must be done at least 24 hours before departure.
+        </p>
       </div>
+
       <div class="modal-footer">
-        <button class="btn btn-secondary" (click)="closeCancelModal()">No, Keep Booking</button>
-        <button class="btn btn-danger" (click)="confirmCancel()" [disabled]="cancelingPnr !== null">
-          <span *ngIf="cancelingPnr === null">Yes, Cancel Booking</span>
-          <span *ngIf="cancelingPnr !== null">Cancelling...</span>
+        <button
+          class="btn btn-secondary"
+          (click)="closeCancelModal()">
+          No, Keep Booking
+        </button>
+
+        <button
+          class="btn btn-danger"
+          (click)="confirmCancel()"
+          [disabled]="cancelingPnr !== null">
+          <span *ngIf="cancelingPnr === null">
+            Yes, Cancel Booking
+          </span>
+          <span *ngIf="cancelingPnr !== null">
+            Cancelling...
+          </span>
         </button>
       </div>
+
     </div>
   </div>
+
 </div>

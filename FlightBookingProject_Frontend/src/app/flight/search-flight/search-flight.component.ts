@@ -38,6 +38,17 @@ export class SearchFlightComponent {
 
   today = new Date().toISOString().split('T')[0];
 
+  cities: string[] = [
+  'DELHI',
+  'MUMBAI',
+  'BANGALORE',
+  'CHENNAI',
+  'KOLKATA',
+  'HYDERABAD',
+  'PUNE',
+  'JAIPUR'
+];
+
   constructor(
     private flightService: FlightService,
     private router: Router
