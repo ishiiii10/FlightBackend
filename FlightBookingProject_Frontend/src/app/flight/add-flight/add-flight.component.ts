@@ -38,6 +38,10 @@ export class AddFlightComponent implements OnInit {
     private router: Router
   ) {}
 
+  goToAdmin() {
+    this.router.navigate(['/admin']);
+  }
+
   ngOnInit(): void {
     // Load enum-backed lists from backend instead of hardcoding.
     this.flightService.getAirlines().subscribe({

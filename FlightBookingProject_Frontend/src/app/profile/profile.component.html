@@ -1,5 +1,5 @@
-<div class="profile-container">
-  <div class="profile-card">
+<div class="container two-column">
+  <div class="card">
     <h2 class="profile-title">
       <span *ngIf="isAdmin()">Admin</span>
       <span *ngIf="!isAdmin()">User</span> Profile
@@ -37,14 +37,24 @@
 
       <div *ngIf="isAdmin()" class="admin-section">
         <h3>Admin Options</h3>
-        <p class="admin-note">You have administrative privileges. You can manage flights and view system-wide information.</p>
+        <p class="admin-note">You have administrative privileges. Manage flights from the admin panel.</p>
       </div>
 
       <div class="profile-actions">
-        <a routerLink="/booking-history" class="btn btn-primary">View Booking History</a>
+        <a *ngIf="!isAdmin()" routerLink="/booking-history" class="btn btn-primary">View Booking History</a>
         <a routerLink="/change-password" class="btn btn-secondary">Change Password</a>
-        <a routerLink="/search" class="btn btn-secondary">Back to Search</a>
+        <a *ngIf="!isAdmin()" routerLink="/search" class="btn btn-secondary">Back to Search</a>
       </div>
     </div>
   </div>
+
+  <aside class="promo-content">
+    <h2>Account</h2>
+    <p class="promo-text">Manage your personal details, change your password and review your bookings. Admins will see admin-specific tools here.</p>
+    <ul class="promo-features">
+      <li>Secure account management</li>
+      <li>Update contact information</li>
+      <li>Change password anytime</li>
+    </ul>
+  </aside>
 </div>

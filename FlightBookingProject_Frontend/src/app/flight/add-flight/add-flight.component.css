@@ -2,24 +2,28 @@
 .form-section {
 	display: flex;
 	align-items: flex-start;
-	padding-top: 2rem;
-	justify-content: flex-start;
+	padding: 2.5rem 20px;
+	justify-content: center;
+	gap: 1.5rem;
 	width: 100%;
+	max-width: 1100px;
+	margin: 0 auto;
 }
 
 .card {
-	width: 100%;
 	background: var(--white);
-	border-radius: 10px;
-	box-shadow: 0 2px 8px var(--shadow);
-	padding: 1.25rem;
+	border-radius: 12px;
+	box-shadow: 0 4px 12px var(--shadow);
+	padding: 1.5rem;
+	flex: 0 0 720px;
+	width: 100%;
 }
 
 .add-header {
-	font-size: 1.4rem;
-	font-weight: 600;
+	font-size: 1.6rem;
+	font-weight: 700;
 	color: var(--text-dark);
-	margin-bottom: 1.5rem;
+	margin-bottom: 1rem;
 	text-align: left;
 }
 
@@ -40,17 +44,15 @@
 	margin-bottom: 6px;
 }
 
-input[type="text"],
-input[type="number"],
-input[type="datetime-local"],
-select,
-textarea {
-	padding: 0.6rem 0.75rem;
+/* Use global .form-input from styles.css; add small overrides */
+.form-input {
+	width: 100%;
+	padding: 10px 12px;
 	border-radius: 8px;
 	border: 1px solid #e5e7eb;
 	font-size: 14px;
 	color: var(--text-dark);
-	background: var(--bg);
+	background: #fff;
 }
 
 .form-hint {
@@ -63,16 +65,6 @@ textarea {
 	display: flex;
 	gap: 0.75rem;
 	margin-top: 1rem;
-}
-
-.btn-save {
-	background: linear-gradient(135deg, var(--light-blue) 0%, var(--primary-blue) 100%);
-	color: var(--white);
-	border: none;
-	padding: 10px 16px;
-	border-radius: 8px;
-	font-weight: 600;
-	cursor: pointer;
 }
 
 .btn-cancel {
@@ -98,6 +90,32 @@ textarea {
 	font-size: 12px;
 	color: var(--text-gray);
 	margin-top: 6px;
+}
+
+.promo-content {
+	flex: 1 1 320px;
+	background: transparent;
+	padding: 1rem 0.5rem;
+}
+
+.promo-content h2 {
+	font-size: 1.5rem;
+	margin-bottom: 0.75rem;
+}
+
+.promo-text {
+	margin-bottom: 1rem;
+}
+
+.promo-features li {
+	padding-left: 1.25rem;
+}
+
+.airplane-illustration {
+	width: 100%;
+	max-width: 220px;
+	opacity: 0.85;
+	margin-top: 1.25rem;
 }
 
 @media (max-width: 968px) {

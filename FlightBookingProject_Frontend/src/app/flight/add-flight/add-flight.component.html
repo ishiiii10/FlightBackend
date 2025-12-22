@@ -1,98 +1,87 @@
-<div class="add-flight-container">
-    <div class="card">
-      <h2>Add New Flight</h2>
-  
-      <form #flightForm="ngForm" (ngSubmit)="onSubmit(flightForm)">
-        <div class="alert error" *ngIf="errorMessage">{{ errorMessage }}</div>
-        <div class="alert success" *ngIf="successMessage">{{ successMessage }}</div>
-  
-        <div class="form-row">
-          <label>Flight Number</label>
-          <input
-            name="flightNumber"
-            [(ngModel)]="formData.flightNumber"
-            required
-            minlength="2" />
-        </div>
-  
-        <div class="form-row">
-          <label>Airline</label>
-          <select
-            name="airline"
-            [(ngModel)]="formData.airline"
-            required>
-            <option value="" disabled selected>Select airline</option>
-            <option *ngFor="let a of airlines" [value]="a">{{ a }}</option>
-          </select>
-        </div>
-  
-        <div class="form-row">
-          <label>Source</label>
-          <select
-            name="source"
-            [(ngModel)]="formData.source"
-            required>
-            <option value="" disabled selected>Select source</option>
+<div class="form-section">
+  <div class="card" style="max-width:720px;">
+    <div class="add-header">Add Flight</div>
+
+    <form (ngSubmit)="onSubmit(flightForm)" #flightForm="ngForm" class="add-form">
+
+      <div class="form-group">
+        <label class="form-label">Flight Number</label>
+        <input class="form-input" required [(ngModel)]="formData.flightNumber" name="flightNumber">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Airline</label>
+        <select class="form-input" required [(ngModel)]="formData.airline" name="airline">
+          <option value="">Select</option>
+          <option *ngFor="let a of airlines" [value]="a">{{ a }}</option>
+        </select>
+      </div>
+
+      <div class="inline-row">
+        <div class="form-group field-half">
+          <label class="form-label">Source</label>
+          <select class="form-input" required [(ngModel)]="formData.source" name="source">
+            <option value="">Select</option>
             <option *ngFor="let c of cities" [value]="c">{{ c }}</option>
           </select>
         </div>
-  
-        <div class="form-row">
-          <label>Destination</label>
-          <select
-            name="destination"
-            [(ngModel)]="formData.destination"
-            required>
-            <option value="" disabled selected>Select destination</option>
+
+        <div class="form-group field-half">
+          <label class="form-label">Destination</label>
+          <select class="form-input" required [(ngModel)]="formData.destination" name="destination">
+            <option value="">Select</option>
             <option *ngFor="let c of cities" [value]="c">{{ c }}</option>
           </select>
         </div>
-  
-        <div class="form-row">
-          <label>Departure Time</label>
-          <input
-            type="datetime-local"
-            name="departureTime"
-            [(ngModel)]="formData.departureTime"
-            [min]="minDeparture"
-            required />
+      </div>
+
+      <div class="inline-row">
+        <div class="form-group field-half">
+          <label class="form-label">Departure Time</label>
+          <input class="form-input" type="datetime-local" required [(ngModel)]="formData.departureTime" name="departureTime" [min]="minDeparture">
         </div>
-  
-        <div class="form-row">
-          <label>Arrival Time</label>
-          <input
-            type="datetime-local"
-            name="arrivalTime"
-            [(ngModel)]="formData.arrivalTime"
-            [min]="formData.departureTime || minDeparture"
-            required />
+
+        <div class="form-group field-half">
+          <label class="form-label">Arrival Time</label>
+          <input class="form-input" type="datetime-local" required [(ngModel)]="formData.arrivalTime" name="arrivalTime">
         </div>
-  
-        <div class="form-row">
-          <label>Total Seats</label>
-          <input
-            type="number"
-            name="totalSeats"
-            [(ngModel)]="formData.totalSeats"
-            min="1"
-            required />
-          <small class="hint">Available seats will automatically match total seats.</small>
+      </div>
+
+      <div class="inline-row">
+        <div class="form-group field-half">
+          <label class="form-label">Total Seats</label>
+          <input class="form-input" type="number" required [(ngModel)]="formData.totalSeats" name="totalSeats">
         </div>
-  
-        <div class="form-row">
-          <label>Price</label>
-          <input
-            type="number"
-            name="price"
-            [(ngModel)]="formData.price"
-            min="1"
-            step="0.01"
-            required />
-        </div>
-  
-        <button type="submit" [disabled]="loading">
-          {{ loading ? 'Saving...' : 'Add Flight' }}
-        </button>
-      </form>
-    </div>
+
+        
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Price</label>
+        <input class="form-input" type="number" required [(ngModel)]="formData.price" name="price">
+        <div class="helper-text">Set ticket price in the default currency.</div>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn-primary" [disabled]="loading || !flightForm.valid">{{ loading ? 'Adding...' : 'Add Flight' }}</button>
+        <button type="button" class="btn-cancel" (click)="goToAdmin()">Cancel</button>
+      </div>
+
+      <div class="alert alert-success mt-3" *ngIf="successMessage">{{ successMessage }}</div>
+      <div class="alert alert-danger mt-3" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+    </form>
   </div>
+
+  <div class="promo-content" style="max-width:360px; margin-left:1.5rem;">
+    <h2>Manage Flights</h2>
+    <p class="promo-text">Add new flights to your inventory. Provide accurate schedule, seat counts and pricing so customers can book seamlessly.</p>
+    <ul class="promo-features">
+      <li>Specify departure & arrival times</li>
+      <li>Control seat availability</li>
+      <li>Set competitive pricing</li>
+    </ul>
+    <img src="/assets/airplane.svg" alt="airplane" class="airplane-illustration" />
+  </div>
+
+</div>
