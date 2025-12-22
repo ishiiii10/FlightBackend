@@ -74,4 +74,12 @@ export class AuthService {
     localStorage.removeItem('role');
     localStorage.removeItem('email');
   }
+
+  changePassword(oldPassword: string, newPassword: string): Observable<void> {
+    const headers = this.getHeaders();
+    return this.http.post<void>(`${API_URL}/auth/change-password`, {
+      oldPassword,
+      newPassword
+    }, { headers });
+  }
 }
