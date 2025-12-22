@@ -13,6 +13,9 @@
         <ng-container *ngIf="isAuthenticated; else unauthenticatedLinks">
           <a routerLink="/profile" routerLinkActive="active">PROFILE</a>
           <a routerLink="/booking-history" routerLinkActive="active">BOOKING HISTORY</a>
+          <a *ngIf="isAdmin" routerLink="/admin/add-flight" routerLinkActive="active">
+            ADD FLIGHT
+          </a>
           <div class="user-info">
             <span class="user-email">{{ userEmail }}</span>
             <span *ngIf="isAdmin" class="admin-badge">ADMIN</span>
