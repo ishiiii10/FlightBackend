@@ -19,7 +19,7 @@ export const routes: Routes = [
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'booking-history', component: ViewHistoryComponent, canActivate: [authGuard] },
   { path: 'booking/:pnr', component: BookingStateComponent, canActivate: [authGuard] },
-  {path: 'admin/add-flight', component: AddFlightComponent, canActivate: [adminGuard]},
+  {path: 'admin/add-flight', component: AddFlightComponent, canActivate: [authGuard, adminGuard]},
   { path: '**', redirectTo: '/search' }
   
 ];

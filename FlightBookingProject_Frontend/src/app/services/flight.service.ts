@@ -51,9 +51,19 @@ export class FlightService {
     });
   }
 
-  createFlight(request: CreateFlightRequest): Observable<any> {
-    const headers = this.getAdminHeaders();
-    return this.http.post(`${API_URL}/flights`, request, { headers });
+  createFlight(payload: {
+    flightNumber: string;
+    airline: string;
+    source: string;
+    destination: string;
+    departureTime: string;  // ISO string
+    arrivalTime: string;    // ISO string
+    totalSeats: number;
+    availableSeats: number;
+    price: number;
+  }): Observable<void> {
+    const headers = this.getHeaders(); // already adds Bearer token
+    return this.http.post<void>(`${API_URL}/flights`, payload, { headers });
   }
 
 
