@@ -1,29 +1,30 @@
 <div class="booking-history-container">
 
-  <!-- Header -->
-  <div class="history-header">
-    <h2>Booking History</h2>
-    <a routerLink="/profile" class="back-link">← Back to Profile</a>
-  </div>
+  <div class="container history-inner card">
+    <!-- Header -->
+    <div class="history-header">
+      <h2>Booking History</h2>
+      <a routerLink="/profile" class="back-link">← Back to Profile</a>
+    </div>
 
   <!-- Status Filter -->
   <div class="filter-bar">
     <button
-      class="filter-btn"
+      class="btn btn-secondary" 
       [class.active]="selectedStatus === 'ALL'"
       (click)="onFilterChange('ALL')">
       All
     </button>
 
     <button
-      class="filter-btn confirmed"
+      class="btn btn-secondary" 
       [class.active]="selectedStatus === 'CONFIRMED'"
       (click)="onFilterChange('CONFIRMED')">
       Confirmed
     </button>
 
     <button
-      class="filter-btn cancelled"
+      class="btn btn-secondary" 
       [class.active]="selectedStatus === 'CANCELLED'"
       (click)="onFilterChange('CANCELLED')">
       Cancelled

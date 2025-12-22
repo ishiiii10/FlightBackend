@@ -1,7 +1,7 @@
 .booking-history-container {
   min-height: calc(100vh - 80px);
-  padding: 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2.5rem 0;
+  background: transparent;
 }
 
 .history-header {
@@ -42,6 +42,38 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+/* Centered card to match other pages */
+.history-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: var(--white);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+}
+
+/* Filter bar using global button styles */
+.filter-bar {
+  max-width: 1200px;
+  margin: 0 auto 1.25rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.filter-bar .btn {
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.filter-bar .btn.active {
+  background: linear-gradient(135deg, var(--light-blue) 0%, var(--primary-blue) 100%);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(59, 130, 246, 0.12);
 }
 
 .booking-card {
@@ -199,7 +231,6 @@
 .loading {
   text-align: center;
   padding: 4rem;
-  color: white;
   font-size: 1.125rem;
 }
 
@@ -234,14 +265,14 @@
 .btn-cancel {
   width: 100%;
   padding: 0.75rem 1.5rem;
-  background: #dc3545;
+  background: linear-gradient(135deg, #e53935, #dc3545);
   color: white;
   border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 0.875rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
   margin-top: 1rem;
 }
 

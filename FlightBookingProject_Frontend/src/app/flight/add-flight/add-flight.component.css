@@ -111,12 +111,15 @@
 	padding-left: 1.25rem;
 }
 
-.airplane-illustration {
-	width: 100%;
-	max-width: 220px;
-	opacity: 0.85;
-	margin-top: 1.25rem;
+.promo-features li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--light-blue);
+  font-weight: bold;
 }
+
+
 
 @media (max-width: 968px) {
 	.form-section {
