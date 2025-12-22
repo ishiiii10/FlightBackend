@@ -1,1 +1,105 @@
-<p>add-flight works!</p>
+<div class="add-flight-container">
+    <div class="card">
+      <h2>Add New Flight</h2>
+  
+      <form #flightForm="ngForm" (ngSubmit)="onSubmit(flightForm)">
+        <div class="alert error" *ngIf="errorMessage">{{ errorMessage }}</div>
+        <div class="alert success" *ngIf="successMessage">{{ successMessage }}</div>
+  
+        <div class="form-row">
+          <label>Flight Number</label>
+          <input
+            name="flightNumber"
+            [(ngModel)]="formData.flightNumber"
+            required
+            minlength="2" />
+        </div>
+  
+        <div class="form-row">
+          <label>Airline</label>
+          <select
+            name="airline"
+            [(ngModel)]="formData.airline"
+            required>
+            <option value="" disabled selected>Select airline</option>
+            <option *ngFor="let a of airlines" [value]="a">{{ a }}</option>
+          </select>
+        </div>
+  
+        <div class="form-row">
+          <label>Source</label>
+          <select
+            name="source"
+            [(ngModel)]="formData.source"
+            required>
+            <option value="" disabled selected>Select source</option>
+            <option *ngFor="let c of cities" [value]="c">{{ c }}</option>
+          </select>
+        </div>
+  
+        <div class="form-row">
+          <label>Destination</label>
+          <select
+            name="destination"
+            [(ngModel)]="formData.destination"
+            required>
+            <option value="" disabled selected>Select destination</option>
+            <option *ngFor="let c of cities" [value]="c">{{ c }}</option>
+          </select>
+        </div>
+  
+        <div class="form-row">
+          <label>Departure Time</label>
+          <input
+            type="datetime-local"
+            name="departureTime"
+            [(ngModel)]="formData.departureTime"
+            required />
+        </div>
+  
+        <div class="form-row">
+          <label>Arrival Time</label>
+          <input
+            type="datetime-local"
+            name="arrivalTime"
+            [(ngModel)]="formData.arrivalTime"
+            required />
+        </div>
+  
+        <div class="form-row">
+          <label>Total Seats</label>
+          <input
+            type="number"
+            name="totalSeats"
+            [(ngModel)]="formData.totalSeats"
+            min="1"
+            required />
+        </div>
+  
+        <div class="form-row">
+          <label>Available Seats</label>
+          <input
+            type="number"
+            name="availableSeats"
+            [(ngModel)]="formData.availableSeats"
+            min="1"
+            required />
+        </div>
+  
+        <div class="form-row">
+          <label>Price</label>
+          <input
+            type="number"
+            name="price"
+            [(ngModel)]="formData.price"
+            min="1"
+            step="0.01"
+            required />
+        </div>
+  
+        <button type="submit" [disabled]="loading">
+          {{ loading ? 'Saving...' : 'Add Flight' }}
+        </button>
+      </form>
+    </div>
+  </div>
