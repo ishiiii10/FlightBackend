@@ -20,19 +20,17 @@ public class AuthService {
     private final JwtService jwtService;
 
     public void signup(SignupRequest request) {
-
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("User already exists");
         }
-
+    
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(request.getRole());
-
+        user.setRole(Role.CUSTOMER);  // hardcoded, no self-admin
+    
         userRepository.save(user);
     }
-
     public LoginResponse login(LoginRequest request) {
 
         User user = userRepository.findByEmail(request.getEmail())
