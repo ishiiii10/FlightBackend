@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -9,31 +9,28 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css'
 })
-export class NavbarComponent implements OnInit {
-  isAuthenticated = false;
-  isAdmin = false;
-  userEmail = '';
-
+export class NavbarComponent {
   constructor(
-    private authService: AuthService,
+    public authService: AuthService,
     private router: Router
   ) {}
 
-  ngOnInit() {
-    this.checkAuthStatus();
+  // Expose auth state as getters so the UI updates
+  // immediately after login/logout/refresh.
+  get isAuthenticated(): boolean {
+    return this.authService.isAuthenticated();
   }
 
-  checkAuthStatus() {
-    this.isAuthenticated = this.authService.isAuthenticated();
-    this.isAdmin = this.authService.isAdmin();
-    this.userEmail = localStorage.getItem('email') || '';
+  get isAdmin(): boolean {
+    return this.authService.isAdmin();
+  }
+
+  get userEmail(): string {
+    return localStorage.getItem('email') || '';
   }
 
   logout() {
     this.authService.logout();
-    this.isAuthenticated = false;
-    this.isAdmin = false;
-    this.userEmail = '';
     this.router.navigate(['/login']);
   }
 }

@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 import { FlightService } from '../../services/flight.service';
 import { CommonModule } from '@angular/common';
 
@@ -51,7 +52,8 @@ export class SearchFlightComponent {
 
   constructor(
     private flightService: FlightService,
-    private router: Router
+    private router: Router,
+    public authService: AuthService
   ) {}
 
   onSearch() {
@@ -115,8 +117,8 @@ export class SearchFlightComponent {
 
 
   bookFlight(flight: Flight) {
-    const token = localStorage.getItem('token');
-    if (!token) {
+    // Extra safety: even if the UI hides the button, protect navigation.
+    if (!this.authService.isAuthenticated()) {
       this.router.navigate(['/login']);
       return;
     }

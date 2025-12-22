@@ -33,11 +33,12 @@ export class AuthService {
     });
   }
 
-  register(email: string, password: string, role: string): Observable<void> {
+  // Register always creates a CUSTOMER on the backend.
+  // Role is not client-controlled to prevent privilege escalation.
+  register(email: string, password: string): Observable<void> {
     return this.http.post<void>(`${API_URL}/auth/signup`, {
       email,
-      password,
-      role
+      password
     });
   }
 

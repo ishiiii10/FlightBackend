@@ -31,8 +31,8 @@ public class SecurityConfig {
                         // 👤 Authenticated user endpoints (both CUSTOMER and ADMIN)
                         .pathMatchers("/auth/profile").authenticated()
 
-                        // 👤 Customer endpoints
-                        .pathMatchers("/bookings/**").hasRole("CUSTOMER")
+                        // 👤 Booking endpoints (accessible to authenticated customers and admins)
+                        .pathMatchers("/bookings/**").hasAnyRole("CUSTOMER", "ADMIN")
 
                         // 🛠 Admin-only flight management
                         .pathMatchers(HttpMethod.POST, "/flights/**").hasRole("ADMIN")

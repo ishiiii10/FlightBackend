@@ -13,8 +13,7 @@ import { CommonModule } from '@angular/common';
 export class RegisterComponent {
   registerData = {
     email: '',
-    password: '',
-    role: 'CUSTOMER'
+    password: ''
   };
   errorMessage = '';
   successMessage = '';
@@ -27,7 +26,7 @@ export class RegisterComponent {
   onRegister() {
     this.errorMessage = '';
     this.successMessage = '';
-    this.authService.register(this.registerData.email, this.registerData.password, this.registerData.role).subscribe({
+    this.authService.register(this.registerData.email, this.registerData.password).subscribe({
       next: () => {
         this.successMessage = 'Registration successful! Redirecting to login...';
         setTimeout(() => {

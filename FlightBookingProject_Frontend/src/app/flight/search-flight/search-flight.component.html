@@ -119,9 +119,16 @@
                 <span class="amount">{{ flight.price }}</span>
               </div>
             </div>
-            <button class="btn-book" (click)="bookFlight(flight); $event.stopPropagation()">
+            <!-- Only authenticated users can see the Book button -->
+            <button
+              *ngIf="authService.isAuthenticated()"
+              class="btn-book"
+              (click)="bookFlight(flight); $event.stopPropagation()">
               Book Now
             </button>
+            <div *ngIf="!authService.isAuthenticated()" class="login-hint">
+              Login to book this flight
+            </div>
           </div>
         </div>
       </div>
