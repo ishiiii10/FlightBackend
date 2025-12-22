@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -11,9 +11,9 @@ import { FlightService } from '../../services/flight.service';
   templateUrl: './add-flight.component.html',
   styleUrl: './add-flight.component.css'
 })
-export class AddFlightComponent {
-  airlines = ['INDIGO', 'AIR_INDIA', 'VISTARA'];   // match backend enum
-  cities = ['DELHI', 'MUMBAI', 'BANGALORE', 'CHENNAI']; // match City enum
+export class AddFlightComponent implements OnInit {
+  airlines: string[] = [];
+  cities: string[] = [];
 
   formData = {
     flightNumber: '',
@@ -23,9 +23,11 @@ export class AddFlightComponent {
     departureTime: '',
     arrivalTime: '',
     totalSeats: 0,
-    availableSeats: 0,
     price: 0
   };
+
+  // Used to prevent selecting past dates in the datetime-local picker.
+  minDeparture: string = new Date().toISOString().slice(0, 16);
 
   loading = false;
   errorMessage = '';
@@ -35,6 +37,19 @@ export class AddFlightComponent {
     private flightService: FlightService,
     private router: Router
   ) {}
+
+  ngOnInit(): void {
+    // Load enum-backed lists from backend instead of hardcoding.
+    this.flightService.getAirlines().subscribe({
+      next: (airlines) => (this.airlines = airlines),
+      error: () => (this.airlines = [])
+    });
+
+    this.flightService.getCities().subscribe({
+      next: (cities) => (this.cities = cities),
+      error: () => (this.cities = [])
+    });
+  }
 
   onSubmit(form: NgForm) {
     this.errorMessage = '';
@@ -52,15 +67,26 @@ export class AddFlightComponent {
 
     const dep = new Date(this.formData.departureTime);
     const arr = new Date(this.formData.arrivalTime);
-    if (isNaN(dep.getTime()) || isNaN(arr.getTime()) || arr <= dep) {
+    const now = new Date();
+
+    if (isNaN(dep.getTime()) || isNaN(arr.getTime())) {
+      this.errorMessage = 'Please provide valid departure and arrival times.';
+      return;
+    }
+
+    // Frontend guard: departure cannot be in the past.
+    if (dep.getTime() < now.getTime()) {
+      this.errorMessage = 'Departure time cannot be in the past.';
+      return;
+    }
+
+    if (arr <= dep) {
       this.errorMessage = 'Arrival time must be after departure time.';
       return;
     }
 
-    if (this.formData.totalSeats <= 0 ||
-        this.formData.availableSeats <= 0 ||
-        this.formData.availableSeats > this.formData.totalSeats) {
-      this.errorMessage = 'Seat counts are invalid.';
+    if (this.formData.totalSeats <= 0) {
+      this.errorMessage = 'Total seats must be greater than zero.';
       return;
     }
 
@@ -69,10 +95,14 @@ export class AddFlightComponent {
       return;
     }
 
+    // Business rule: for new flights, availableSeats must equal totalSeats.
+    const availableSeats = this.formData.totalSeats;
+
     this.loading = true;
 
     this.flightService.createFlight({
       ...this.formData,
+      availableSeats,
       // ensure backend expects ISO strings
       departureTime: dep.toISOString(),
       arrivalTime: arr.toISOString()

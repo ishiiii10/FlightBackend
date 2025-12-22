@@ -1,6 +1,7 @@
 package com.chubb.FlightService.service.impl;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -36,13 +37,23 @@ public class FlightServiceImpl implements FlightService {
             throw new RuntimeException("Only ADMIN can create flights");
         }
 
+        // Business validation: prevent same source and destination
+        if (request.getSource() == request.getDestination()) {
+            throw new IllegalArgumentException("Source and destination cannot be the same city");
+        }
+
+        // Business validation: departure cannot be in the past (in addition to @FutureOrPresent)
+        if (request.getDepartureTime().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Departure time cannot be in the past");
+        }
+
         if (request.getArrivalTime().isBefore(request.getDepartureTime())) {
             throw new IllegalArgumentException("Arrival time cannot be before departure time");
         }
 
-        if (request.getAvailableSeats() > request.getTotalSeats()) {
-            throw new IllegalArgumentException("Available seats cannot be more than total seats");
-        }
+        // For new flights, available seats must equal total seats.
+        // We ignore any client-provided availableSeats and enforce this rule server-side.
+        int totalSeats = request.getTotalSeats();
 
         Flight flight = Flight.builder()
                 .flightNumber(request.getFlightNumber())
@@ -51,8 +62,8 @@ public class FlightServiceImpl implements FlightService {
                 .destination(request.getDestination())
                 .departureTime(request.getDepartureTime())
                 .arrivalTime(request.getArrivalTime())
-                .totalSeats(request.getTotalSeats())
-                .availableSeats(request.getAvailableSeats())
+                .totalSeats(totalSeats)
+                .availableSeats(totalSeats)
                 .price(request.getPrice())
                 .build();
 
@@ -128,6 +139,11 @@ public List<FlightSummaryResponse> searchFlights(
 
         Flight flight = flightRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Flight not found with ID: " + id));
+
+        // Business validation: prevent same source and destination on update as well
+        if (request.getSource() == request.getDestination()) {
+            throw new IllegalArgumentException("Source and destination cannot be the same city");
+        }
 
         if (request.getArrivalTime().isBefore(request.getDepartureTime())) {
             throw new IllegalArgumentException("Arrival time cannot be before departure time");

@@ -54,6 +54,7 @@
             type="datetime-local"
             name="departureTime"
             [(ngModel)]="formData.departureTime"
+            [min]="minDeparture"
             required />
         </div>
   
@@ -74,16 +75,7 @@
             [(ngModel)]="formData.totalSeats"
             min="1"
             required />
-        </div>
-  
-        <div class="form-row">
-          <label>Available Seats</label>
-          <input
-            type="number"
-            name="availableSeats"
-            [(ngModel)]="formData.availableSeats"
-            min="1"
-            required />
+          <small class="hint">Available seats will automatically match total seats.</small>
         </div>
   
         <div class="form-row">

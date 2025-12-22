@@ -88,4 +88,13 @@ export class FlightService {
       params: { travelDate }
     });
   }
+
+  // Fetch enum-backed lists from the backend so we don't hardcode values in the UI.
+  getAirlines(): Observable<string[]> {
+    return this.http.get<string[]>(`${API_URL}/flights/airlines`);
+  }
+
+  getCities(): Observable<string[]> {
+    return this.http.get<string[]>(`${API_URL}/flights/cities`);
+  }
 }

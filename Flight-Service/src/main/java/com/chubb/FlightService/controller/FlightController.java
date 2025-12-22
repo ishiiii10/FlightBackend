@@ -1,5 +1,6 @@
 package com.chubb.FlightService.controller;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,7 @@ import com.chubb.FlightService.dto.CreateFlightRequest;
 import com.chubb.FlightService.dto.CreateFlightResponse;
 import com.chubb.FlightService.dto.FlightSummaryResponse;
 import com.chubb.FlightService.dto.InternalFlightResponse;
+import com.chubb.FlightService.enums.Airline;
 import com.chubb.FlightService.enums.City;
 import com.chubb.FlightService.service.FlightService;
 
@@ -71,6 +73,18 @@ public class FlightController {
     @GetMapping
     public ResponseEntity<List<FlightSummaryResponse>> getAllFlights() {
         return ResponseEntity.ok(flightService.getAllFlights());
+    }
+
+    // 🌍 PUBLIC – expose all airlines (values from Airline enum)
+    @GetMapping("/airlines")
+    public ResponseEntity<List<Airline>> getAirlines() {
+        return ResponseEntity.ok(Arrays.asList(Airline.values()));
+    }
+
+    // 🌍 PUBLIC – expose all cities (values from City enum)
+    @GetMapping("/cities")
+    public ResponseEntity<List<City>> getCities() {
+        return ResponseEntity.ok(Arrays.asList(City.values()));
     }
 
     // 🌍 PUBLIC
