@@ -63,6 +63,23 @@ body {
   transform: translateY(0);
 }
 
+/* Global danger button so all components get consistent red button */
+.btn-danger {
+  background: linear-gradient(135deg, #e53935 0%, #dc3545 100%);
+  color: var(--white);
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-danger:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(220,53,69,0.12);
+}
+
 /* Input Styles */
 .form-input {
   width: 100%;

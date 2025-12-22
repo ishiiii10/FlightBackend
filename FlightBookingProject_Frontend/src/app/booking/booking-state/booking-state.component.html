@@ -1,8 +1,10 @@
-<div *ngIf="loading" class="p-3">Loading booking...</div>
-<div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+<div class="container">
+  <div class="card booking-state-card">
+    <div *ngIf="loading" class="p-3">Loading booking...</div>
+    <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
 
-<div *ngIf="booking" class="p-3">
-  <h4>Booking Summary</h4>
+    <div *ngIf="booking" class="p-3">
+      <h4>Booking Summary</h4>
   <p><strong>PNR:</strong> {{ booking.pnr }}</p>
   <p><strong>Status:</strong> {{ booking.status }}</p>
   <p><strong>Flight:</strong> {{ booking.flightNumber }}</p>
@@ -29,7 +31,9 @@
     <button class="btn btn-primary" (click)="goToSearch()">
       Book Another Flight
     </button>
+    </div>
   </div>
+</div>
 
   <div *ngIf="successMessage" class="alert alert-success mt-3">
     {{ successMessage }}

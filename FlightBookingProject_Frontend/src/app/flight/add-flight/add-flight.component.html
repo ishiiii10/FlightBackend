@@ -20,9 +20,9 @@
       <div class="inline-row">
         <div class="form-group field-half">
           <label class="form-label">Source</label>
-          <select class="form-input" required [(ngModel)]="formData.source" name="source">
+          <select class="form-input" required [(ngModel)]="formData.source" name="source" (change)="onSourceChange()">
             <option value="">Select</option>
-            <option *ngFor="let c of cities" [value]="c">{{ c }}</option>
+            <option *ngFor="let c of cities" [value]="c" [disabled]="c === formData.destination">{{ c }}</option>
           </select>
         </div>
 
@@ -30,7 +30,7 @@
           <label class="form-label">Destination</label>
           <select class="form-input" required [(ngModel)]="formData.destination" name="destination">
             <option value="">Select</option>
-            <option *ngFor="let c of cities" [value]="c">{{ c }}</option>
+            <option *ngFor="let c of cities" [value]="c" [disabled]="c === formData.source">{{ c }}</option>
           </select>
         </div>
       </div>

@@ -55,6 +55,13 @@ export class AddFlightComponent implements OnInit {
     });
   }
 
+  onSourceChange() {
+    // if user selects a source that equals current destination, clear destination
+    if (this.formData.source && this.formData.destination === this.formData.source) {
+      this.formData.destination = '';
+    }
+  }
+
   onSubmit(form: NgForm) {
     this.errorMessage = '';
     this.successMessage = '';
@@ -114,6 +121,8 @@ export class AddFlightComponent implements OnInit {
       next: () => {
         this.successMessage = 'Flight added successfully.';
         this.loading = false;
+        // navigate to search so the added flight can be found immediately
+        this.router.navigate(['/search'], { queryParams: { source: this.formData.source, destination: this.formData.destination } });
         form.resetForm();
       },
       error: (err) => {
