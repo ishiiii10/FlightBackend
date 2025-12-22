@@ -7,6 +7,7 @@ import com.chubb.auth.dto.LoginResponse;
 import com.chubb.auth.dto.SignupRequest;
 import com.chubb.auth.dto.UserProfileResponse;
 import com.chubb.auth.entity.User;
+import com.chubb.auth.dto.ChangePasswordRequest;
 import com.chubb.auth.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
@@ -54,5 +55,20 @@ public class AuthService {
                 .role(user.getRole())
                 .fullName(user.getEmail()) // Using email as name for now, can be extended later
                 .build();
+    }
+    public void changePassword(String email, ChangePasswordRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new RuntimeException("Old password is incorrect");
+        }
+    
+        if (request.getNewPassword().length() < 6) {
+            throw new RuntimeException("New password must be at least 6 characters");
+        }
+    
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 }
