@@ -5,6 +5,7 @@ import com.chubb.auth.dto.LoginResponse;
 import com.chubb.auth.dto.SignupRequest;
 import com.chubb.auth.dto.UserProfileResponse;
 import com.chubb.auth.service.AuthService;
+import com.chubb.auth.dto.ChangePasswordRequest;
 
 import jakarta.validation.Valid;
 
@@ -42,4 +43,12 @@ public class AuthController {
     ) {
         return ResponseEntity.ok(authService.getProfile(email));
     }
+    @PostMapping("/change-password")
+public ResponseEntity<Void> changePassword(
+        @RequestHeader("X-User-Email") String email,
+        @Valid @RequestBody ChangePasswordRequest request
+) {
+    authService.changePassword(email, request);
+    return ResponseEntity.ok().build();
+}
 }
