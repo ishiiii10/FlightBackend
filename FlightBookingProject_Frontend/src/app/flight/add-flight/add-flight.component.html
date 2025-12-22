@@ -64,6 +64,7 @@
             type="datetime-local"
             name="arrivalTime"
             [(ngModel)]="formData.arrivalTime"
+            [min]="formData.departureTime || minDeparture"
             required />
         </div>
   
