@@ -34,12 +34,13 @@ public class AuthService {
         userRepository.save(user);
     }
     public LoginResponse login(LoginRequest request) {
-
+        // Check if user exists
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + request.getEmail()));
 
+        // Verify password
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new RuntimeException("Invalid password");
         }
 
         String token = jwtService.generateToken(user);

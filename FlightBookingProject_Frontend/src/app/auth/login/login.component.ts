@@ -26,13 +26,21 @@ export class LoginComponent {
     this.errorMessage = '';
     this.authService.login(this.loginData.email, this.loginData.password).subscribe({
       next: (response) => {
+        // Store auth data in localStorage
         localStorage.setItem('token', response.token);
         localStorage.setItem('role', response.role);
         localStorage.setItem('email', this.loginData.email);
+        
+        // Debug: log role to console (can be removed in production)
+        console.log('Login successful. Role:', response.role);
+        
         this.router.navigate(['/search']);
       },
       error: (error) => {
-        this.errorMessage = error.error?.message || 'Login failed. Please check your credentials.';
+        // Better error handling
+        const errorMsg = error.error?.message || error.message || 'Login failed. Please check your credentials.';
+        this.errorMessage = errorMsg;
+        console.error('Login error:', error);
       }
     });
   }
