@@ -59,18 +59,33 @@ public class AuthService {
                 .build();
     }
     public void changePassword(String email, ChangePasswordRequest request) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-    
-        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
-            throw new RuntimeException("Old password is incorrect");
-        }
-    
-        if (request.getNewPassword().length() < 6) {
-            throw new RuntimeException("New password must be at least 6 characters");
-        }
-    
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        userRepository.save(user);
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+    String passwordPattern = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{6,}$";
+
+    // Validate old password format
+    if (!request.getOldPassword().matches(passwordPattern)) {
+        throw new RuntimeException("Old password does not meet security requirements");
     }
+
+    // Check old password against stored password
+    if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+        throw new RuntimeException("Old password is incorrect");
+    }
+
+    // Validate new password format
+    if (!request.getNewPassword().matches(passwordPattern)) {
+        throw new RuntimeException("New password must contain at least 1 uppercase, 1 lowercase, 1 number, 1 special character, and be minimum 6 characters long.");
+    }
+
+    // Check new password not same as old
+    if (request.getNewPassword().equals(request.getOldPassword())) {
+        throw new RuntimeException("New password cannot be the same as the old password");
+    }
+
+    // Everything valid => update
+    user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+    userRepository.save(user);
+}
 }
